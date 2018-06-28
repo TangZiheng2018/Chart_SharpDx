@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpDxTest_WF.BarComponent.Models;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
 

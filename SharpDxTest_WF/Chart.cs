@@ -21,6 +21,7 @@ using System.Net;
 using Newtonsoft.Json;
 using SharpDxTest_WF.BarComponent;
 using SharpDxTest_WF.BarComponent.BarTypes;
+using SharpDxTest_WF.BarComponent.Models;
 using SharpDxTest_WF.Drawings;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDxTest_WF.DrawingsComponent.Base;

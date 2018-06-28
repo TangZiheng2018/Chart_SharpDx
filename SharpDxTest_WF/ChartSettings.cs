@@ -173,6 +173,11 @@ namespace SharpDxTest_WF
             get => Convert.ToInt32((_chartWidth / (_barWidthPercent * _chartWidth + _spaceBetweenBarsPercent * _chartWidth))*0.9f); // get less on 10% bars, to make chart not overflowed
         }
 
+        public float TouchAxesPosition
+        {
+            get => AxeSettings.touchXYPoint.Y;
+        }
+
         public TimingBy TimeIn
         {
             get => _dateIn;
@@ -208,25 +213,6 @@ namespace SharpDxTest_WF
                             time = AxeValues.MaxDateLocation.Subtract(AxeValues.MinDateLocation).TotalDays;
                         }
                     break;
-
-                    case TimingBy.Week:
-                        {
-                            time = AxeValues.MaxDate.Subtract(AxeValues.MinDate).TotalDays/7;
-                        }
-                    break;
-
-                    case TimingBy.Mouth:
-                        {
-                            time = AxeValues.MaxDate.Subtract(AxeValues.MinDate).TotalDays/30;
-                        }
-                    break;
-
-                    case TimingBy.Year:
-                        {
-                            time = AxeValues.MaxDate.Subtract(AxeValues.MinDate).TotalDays/365;
-                        }
-                    break;
-
                     default: throw new ArgumentOutOfRangeException();
 
                 }
@@ -235,12 +221,7 @@ namespace SharpDxTest_WF
         }
 
         public ChartMinMaxValues AxeValues { get; private set; }
-
-        public float TouchAxesPosition
-        {
-            get => AxeSettings.touchXYPoint.Y;
-        }
-
+        
         public AxeSettings AxeSettings { get; private set; }
 
         public Brushes Brushes { get; private set; }
@@ -326,21 +307,7 @@ namespace SharpDxTest_WF
             var value1 = AxeValues.MinValueLocation + valueFirstPart;
             var value2 = AxeValues.MinValueLocation + valueSecondPart;
 
-            SetMinMaxBorders(Min(value1, value2), Max(value1, value2), timeFrom, timeTo);
-        }
-
-        private float Min(float x, float y)
-        {
-            if (x < y)
-                return x;
-            return y;
-        }
-
-        private float Max(float x, float y)
-        {
-            if (x > y)
-                return x;
-            return y;
+            SetMinMaxBorders(Math.Min(value1, value2), Math.Max(value1, value2), timeFrom, timeTo);
         }
         
         private void SetChartSize()
@@ -362,6 +329,7 @@ namespace SharpDxTest_WF
             if (AxeSettings == null)
                 SetVectors();
         }
+
         public void SetMinMaxBorders(BarsMinMaxPositions positions)
         {
             AxeValues = new ChartMinMaxValues(positions.MinValue, positions.MaxValue, positions.MinDate, positions.MaxDate);
@@ -602,15 +570,5 @@ namespace SharpDxTest_WF
         }
 
     }
-
-    public enum TimingBy
-    {
-        Second,
-        Minute,
-        Hour,
-        Day,
-        Week,
-        Mouth,
-        Year
-    }
+    
 }

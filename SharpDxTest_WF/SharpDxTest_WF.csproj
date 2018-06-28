@@ -74,6 +74,14 @@
     <Compile Include="BarComponent\Models\BarModel.cs" />
     <Compile Include="BarComponent\BarRenderingBase.cs" />
     <Compile Include="BarComponent\Models\BarBorders.cs" />
+    <Compile Include="BarComponent\Models\TimingBy.cs" />
+    <Compile Include="ChartRendering\Base\ChartWindowBase.cs" />
+    <Compile Include="ChartRendering\Base\WindowBase.cs" />
+    <Compile Include="ChartRendering\AxeSettings.cs" />
+    <Compile Include="ChartRendering\Brushes.cs" />
+    <Compile Include="ChartRendering\Helpers\Paddings.cs" />
+    <Compile Include="ChartRendering\Interfaces\IBarSettings.cs" />
+    <Compile Include="ChartRendering\Interfaces\IChartResizing.cs" />
     <Compile Include="ChartSettings.cs" />
     <Compile Include="Chart.cs">
       <SubType>Form</SubType>
@@ -118,8 +126,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ChartRendering\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
