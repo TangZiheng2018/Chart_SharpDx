@@ -60,7 +60,6 @@ namespace SharpDxTest_WF
         private float _paddingBottomRatio;
         private float _barWidthPercent = 0.04f;
         private float _spaceBetweenBarsPercent = 0.02f;
-        private int _countBarsPerChart;
         private float _partToResize;
         private TimingBy _dateIn;
         #endregion

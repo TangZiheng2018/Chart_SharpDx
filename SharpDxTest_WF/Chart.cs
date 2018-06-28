@@ -49,7 +49,6 @@ namespace SharpDxTest_WF
             private SharpDX.Direct2D1.Factory _d2dFactory;
             private static Text _textFormat;
             private SwapChainDescription chainDescription;
-            private bool _lockZoom;
 
         #endregion
 
@@ -269,6 +268,26 @@ namespace SharpDxTest_WF
 
             switch (key)
             {
+                case Keys.D1:
+                {
+                    if (_barType != BarType.Candle)
+                    {
+                        _barType = BarType.Candle;
+                        _barRendering = new BarCandle(_d2dRenderTarget,_barRendering.Bars,_chart);
+                        return;
+                    }
+                    return;
+                }
+                case Keys.D2:
+                {
+                    if (_barType != BarType.OHLC)
+                    {
+                        _barType = BarType.OHLC;
+                        _barRendering = new BarOHLC(_d2dRenderTarget, _barRendering.Bars, _chart);
+                        return;
+                    }
+                    return;
+                }
                 case Keys.Q:
                 {
                     if (_chartHelpers != ChartHelpers.Net)
@@ -293,32 +312,65 @@ namespace SharpDxTest_WF
                 }
                 case Keys.E:
                 {
-                    _tempDrawing = new LineFigure(_d2dRenderTarget);
-                    _actions = DrawingActions.LineDrawing;
+                    if (_actions != DrawingActions.LineDrawing)
+                    {
+                        _actions = DrawingActions.LineDrawing;
+                        _tempDrawing = new LineFigure(_d2dRenderTarget);
+                        return;
+                    }
+
+                    _tempDrawing = null;
+                    _actions = DrawingActions.Default;
                     return;
                 }
                 case Keys.R:
                 {
-                    _tempDrawing = new RectangleFigure(_d2dRenderTarget);
-                    _actions = DrawingActions.RectangleDrawing;
+                    if (_actions != DrawingActions.RectangleDrawing)
+                    {
+                        _tempDrawing = new RectangleFigure(_d2dRenderTarget);
+                        _actions = DrawingActions.RectangleDrawing;
+                        return;
+                    }
+
+                    _tempDrawing = null;
+                    _actions = DrawingActions.Default;
                     return;
                 }
                 case Keys.T:
                 {
-                    _tempDrawing = new EllipseFigure(_d2dRenderTarget);
-                    _actions = DrawingActions.EllipseDrawing;
+                    if (_actions != DrawingActions.EllipseDrawing)
+                    {
+                        _tempDrawing = new EllipseFigure(_d2dRenderTarget);
+                        _actions = DrawingActions.EllipseDrawing;
+                        return;
+                    }
+
+                    _tempDrawing = null;
+                    _actions = DrawingActions.Default;
                     return;
                 }
                 case Keys.A:
                 {
-                    _actions = DrawingActions.StraightLineXDrawing;
+                    if(_actions != DrawingActions.StraightLineXDrawing)
+                    {
+                        _actions = DrawingActions.StraightLineXDrawing;
+                        return;
+                    }
+
+                    _actions = DrawingActions.Default;
                     return;
-                }
+                    }
                 case Keys.S:
                 {
-                    _actions = DrawingActions.StraightLineYDrawing;
+                    if (_actions != DrawingActions.StraightLineYDrawing)
+                    {
+                        _actions = DrawingActions.StraightLineYDrawing;
+                        return;
+                    }
+
+                    _actions = DrawingActions.Default;
                     return;
-                }
+                    }
                 case Keys.Z:
                 {
                     _chartHelpers = ChartHelpers.Zoom;
@@ -348,12 +400,12 @@ namespace SharpDxTest_WF
                 }
                 case DrawingActions.StraightLineXDrawing:
                 {
-                    SetXStraightLine(_mousePisition.X);
+                    SetStraightLine(_mousePisition.X, true);
                     break;
                 }
                 case DrawingActions.StraightLineYDrawing:
                 {
-                    SetYStraightLine(_mousePisition.Y);
+                    SetStraightLine(_mousePisition.Y,false);
                     break;
                 }
             }
@@ -370,9 +422,7 @@ namespace SharpDxTest_WF
 
                 if (!isSetted) return;
                 
-                //ZoomUpChart();
                 _tempDrawing = null;
-
                 _chartHelpers = ChartHelpers.Default;
             }
         }
@@ -473,24 +523,27 @@ namespace SharpDxTest_WF
 
         #region Methods
 
-        private void SetXStraightLine(float x)
+        private void SetStraightLine(float point, bool isX)
         {
             var line = new LineFigure(_d2dRenderTarget);
 
-            var lineStart = new Vector2(x, ClientSize.Height * _chart.PaddingTopRatio);
-            var lineFinish = new Vector2(x, ClientSize.Height * _chart.PaddingBottomRatio);
+            var lineStart = new Vector2();
+            var lineFinish = new Vector2();
 
-            line.Line = new CustomLine(lineStart, lineFinish);
-
-            _drawings.Add((SelectedFigureBase)line);
-        }
-
-        private void SetYStraightLine(float y)
-        {
-            var line = new LineFigure(_d2dRenderTarget);
-
-            var lineStart = new Vector2(ClientSize.Width * _chart.PaddingLeftRatio, y);
-            var lineFinish = new Vector2(ClientSize.Width * _chart.PaddingRightRatio, y);
+            if (isX)
+            {
+                lineStart.X = point;
+                lineStart.Y = ClientSize.Height * (_chart.PaddingTopRatio / 2);
+                lineFinish.X = point;
+                lineFinish.Y = ClientSize.Height * _chart.PaddingBottomRatio;
+            }
+            else
+            {
+                lineStart.X = ClientSize.Width * (_chart.PaddingLeftRatio / 2);
+                lineStart.Y = point;
+                lineFinish.X = ClientSize.Width * _chart.PaddingRightRatio;
+                lineFinish.Y = point;
+            }
 
             line.Line = new CustomLine(lineStart, lineFinish);
 

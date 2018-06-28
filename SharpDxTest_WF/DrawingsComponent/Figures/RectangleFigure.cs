@@ -14,10 +14,14 @@ namespace SharpDxTest_WF.Drawings.Figures
 {
     public class RectangleFigure : SelectedFigureBase
     {
+        private RawRectangleF _rectangleF;
+
         public RectangleFigure(RenderTarget render) : base(render)
         {
             
         }
+     
+        protected RectangleF Rectangle { get;set; }
         
         public override bool SetPosition(float x, float y)
         {

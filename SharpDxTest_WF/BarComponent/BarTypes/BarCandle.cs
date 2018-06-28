@@ -17,8 +17,7 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
         {
             Skip = 0;
         }
-
-
+        
         protected RawVector2 GetVector(ChartSettings chartSettings, float timeForLocate, float value)
         {
             var padding = chartSettings.WindowWidth * chartSettings.PaddingLeftRatio;
