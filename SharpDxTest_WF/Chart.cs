@@ -34,10 +34,6 @@ namespace SharpDxTest_WF
     using AlphaMode = SharpDX.Direct2D1.AlphaMode;
     using Factory = SharpDX.DXGI.Factory;
     
-    
-    
-
-
     public partial class Chart : Form
     {
 
