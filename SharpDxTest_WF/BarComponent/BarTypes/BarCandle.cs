@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDxTest_WF.BarComponent.Models;
+using SharpDxTest_WF.ChartRendering;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
@@ -13,28 +14,27 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
 {
     public class BarCandle : BarRenderingBase
     {
-        public BarCandle(RenderTarget render, List<BarModel> bars, ChartSettings chartInfo) : base(render, bars, chartInfo)
+        public BarCandle(RenderTarget render, List<BarModel> bars, ChartDrawing chartInfo, int skip = 0) : base(render, bars, chartInfo)
         {
-            Skip = 0;
+            Skip = skip;
         }
         
-        protected RawVector2 GetVector(ChartSettings chartSettings, float timeForLocate, float value)
+        protected RawVector2 GetVector(ChartDrawing chartSettings, float timeForLocate, float value)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.PaddingLeftRatio;
-            var barWidth = chartSettings.WindowWidth * chartSettings.BarWidthPercent;
+            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
 
-            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + barWidth / 2;
+            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + chartSettings.BarInfo.BarWidth / 2;
 
-            var pointY = GetYScreenPoint(value, chartSettings.WindowHeight, chartSettings.AxeValues.MinValueLocation,
-                chartSettings.AxeValues.MaxValueLocation);
+            var pointY = GetYScreenPoint(value, chartSettings.WindowHeight, chartSettings.MinMaxValues.MinValueLocation,
+                chartSettings.MinMaxValues.MaxValueLocation);
 
-            return new RawVector2(timePointX, pointY);
+            return new RawVector2(timePointX, pointY * 0.99f);
         }
 
-        protected RawVector2 GetPlacement(ChartSettings chartSettings, float timeForLocate, float value, bool isStart = false, bool isOpenBar = true)
+        protected RawVector2 GetPlacement(ChartDrawing chartSettings, float timeForLocate, float value, bool isStart = false, bool isOpenBar = true)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.PaddingLeftRatio;
-            var offset = chartSettings.WindowWidth * 0.007f;
+            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
+            var offset = chartSettings.WindowWidth * 0.01f;
 
             var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + offset;
 
@@ -44,19 +44,19 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                 timePointX += offset;
 
             var valueYPoint = GetYScreenPoint(value, chartSettings.WindowHeight,
-                chartSettings.AxeValues.MinValueLocation, chartSettings.AxeValues.MaxValueLocation);
+                chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);
 
             return new RawVector2(timePointX, valueYPoint);
         }
 
-        public override void RenderBars()
+        public override void StartRendering()
         {
             foreach (var bar in Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart))
             {
                 var timeSpan = 0;
-                var currentBarTime = bar.Time.Subtract(ChartInfo.AxeValues.MinDate);
+                var currentBarTime = bar.Time.Subtract(ChartInfo.MinMaxValues.MinDateLocation);
 
-                switch (ChartInfo.TimeIn)
+                switch (ChartInfo.DateIn)
                 {
                     case TimingBy.Minute:
                         timeSpan = Convert.ToInt32(currentBarTime.TotalMinutes);
@@ -76,15 +76,15 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                 var close = (float)bar.Close;
 
                 var vectorOpenStart = GetPlacement(ChartInfo, timeSpan, open, true);
-                var vectorCloseStart = GetPlacement(ChartInfo, timeSpan, close , true,false);
+                var vectorCloseStart = GetPlacement(ChartInfo, timeSpan, close, true, false);
 
                 var vectorOpenFinish = GetPlacement(ChartInfo, timeSpan, open);
-                var vectorCloseFinish = GetPlacement(ChartInfo, timeSpan, close, isOpenBar:false);
+                var vectorCloseFinish = GetPlacement(ChartInfo, timeSpan, close, isOpenBar: false);
 
                 Render.DrawLine(vectorOpenStart, vectorOpenFinish,
-                    GreenBgBrush,2);
+                    GreenBgBrush, 2);
                 Render.DrawLine(vectorCloseStart, vectorCloseFinish,
-                    RedBgBrush,2);
+                    RedBgBrush, 2);
 
 
                 var vectorHigh = GetVector(ChartInfo, timeSpan, (float)bar.High);
@@ -93,7 +93,5 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                 Render.DrawLine(vectorHigh, vectorLow, ChartInfo.Brushes.Black, 2);
             }
         }
-
-        
     }
 }

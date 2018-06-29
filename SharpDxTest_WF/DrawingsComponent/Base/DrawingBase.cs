@@ -4,27 +4,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
+using SharpDxTest_WF.HelperModels;
+using SharpDxTest_WF.Models;
 using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.DrawingsComponent.Base
 {
-    public abstract class DrawingBase
+    public abstract class DrawingBase : RenderingBase
     {
-        protected RenderTarget _render;
-
-        protected SolidColorBrush _borderBrush;
-        protected SolidColorBrush _backgroundBrush;
-
-        protected DrawingBase(RenderTarget render)
+        public SolidColorBrush BorderBrush
         {
-            _render = render;
-            _borderBrush = new SolidColorBrush(_render, Color.Black);
-            _backgroundBrush = new SolidColorBrush(_render, Color.Blue,new BrushProperties { Opacity = 0.2f});
+            get;
+        }
+
+        public SolidColorBrush BackgroundBrush
+        {
+            get;
+        }
+
+        protected DrawingBase(RenderTarget render) : base(render)
+        {
+            BorderBrush = new SolidColorBrush(Render, Color.Black);
+            BackgroundBrush = new SolidColorBrush(Render, Color.Blue,new BrushProperties { Opacity = 0.2f});
         }
         
-        public abstract void RenderFigure();
-        public abstract void RenderPreview(float dx, float dy);
+        public abstract void RenderPreview(ScreenPoint point);
     }
 }

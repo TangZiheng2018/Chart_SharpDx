@@ -4,52 +4,75 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDxTest_WF.BarComponent.Models;
+using SharpDxTest_WF.ChartRendering;
+using SharpDxTest_WF.Models;
 using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.BarComponent
 {
-    public abstract class BarRenderingBase
+    public abstract class BarRenderingBase : RenderingBase
     {
-        #region fields
+        #region Fields
 
         private List<BarModel> _bars;
-        private readonly RenderTarget _render;
-        private readonly SolidColorBrush _redBgBrush;
-        private readonly SolidColorBrush _greenBgBrush;
-        private readonly SolidColorBrush _borderBlackBrush;
-        private readonly ChartSettings _chartInfo;
+        private SolidColorBrush _redBgBrush;
+        private SolidColorBrush _greenBgBrush;
+        private SolidColorBrush _borderBlackBrush;
+        private ChartDrawing _chartInfo;
 
         #endregion
 
-        #region properties
+        #region Properties
 
-        protected ChartSettings ChartInfo => _chartInfo;
-        public List<BarModel> Bars => _bars;
-        protected RenderTarget Render => _render;
-        protected SolidColorBrush RedBgBrush => _redBgBrush;
-        protected SolidColorBrush GreenBgBrush => _greenBgBrush;
-        protected SolidColorBrush BorderBlackBrush => _borderBlackBrush;
-        public BarsMinMaxPositions MinMaxPositions
+        protected ChartDrawing ChartInfo
         {
-            get => SetMinMaxPositions();
+            get => _chartInfo;
+            set => _chartInfo = value ?? throw new NullReferenceException();
         }
+
+        public List<BarModel> Bars
+        {
+            get => _bars;
+            set
+            {
+                if(value?.Any() == true)
+                    _bars = value;
+                throw new NullReferenceException();
+            }
+        }
+
+        protected SolidColorBrush RedBgBrush
+        {
+            get => _redBgBrush;
+            set => _redBgBrush = value ?? throw new NullReferenceException();
+        }
+
+        protected SolidColorBrush GreenBgBrush
+        {
+            get => _greenBgBrush;
+            set => _greenBgBrush = value ?? throw new NullReferenceException();
+        }
+
+        protected SolidColorBrush BorderBlackBrush
+        {
+            get => _borderBlackBrush;
+            set => _borderBlackBrush = value ?? throw new NullReferenceException();
+        }
+        
         public int Skip { get; set; }
 
         #endregion
         
-        protected BarRenderingBase(RenderTarget render, List<BarModel> bars, ChartSettings chartInfo)
+        protected BarRenderingBase(RenderTarget render, List<BarModel> bars, ChartDrawing chartInfo) : base(render)
         {
             _bars = bars;
-            _render = render;
             _chartInfo = chartInfo;
-            _redBgBrush = new SolidColorBrush(_render, Color.Red);
-            _greenBgBrush = new SolidColorBrush(_render, Color.Green);
-            _borderBlackBrush = new SolidColorBrush(_render, Color.Black);
+            RedBgBrush = new SolidColorBrush(Render, Color.Red);
+            GreenBgBrush = new SolidColorBrush(Render, Color.Green);
+            BorderBlackBrush = new SolidColorBrush(Render, Color.Black);
         }
-
-        public abstract void RenderBars();
 
         protected virtual float GetYScreenPoint(float value, float windowHeight, float minValue, float maxValue)
         {
@@ -58,9 +81,9 @@ namespace SharpDxTest_WF.BarComponent
             return (chartHeight - (chartHeight * normalize)) + windowHeight * 0.1f;
         }
 
-        protected BarsMinMaxPositions SetMinMaxPositions()
+        public BarMinMaxPositions MinMaxPositions()
         {
-            var borders = new BarsMinMaxPositions();
+            var borders = new BarMinMaxPositions();
             var take = _chartInfo.CountBarsPerChart;
 
             borders.MinValue = Convert.ToSingle(_bars

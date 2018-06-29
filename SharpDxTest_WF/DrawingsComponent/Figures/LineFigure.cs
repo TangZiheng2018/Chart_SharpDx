@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDxTest_WF.DrawingsComponent.Base;
+using SharpDxTest_WF.HelperModels;
 using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
@@ -14,11 +15,15 @@ namespace SharpDxTest_WF.Drawings.Figures
 {
     public class LineFigure : SelectedFigureBase
     {
+
         private CustomLine _line;
+
+
         public LineFigure(RenderTarget render) : base(render)
         {
             _line = new CustomLine();
         }
+
 
         public CustomLine Line
         {
@@ -29,38 +34,43 @@ namespace SharpDxTest_WF.Drawings.Figures
                     _line = value;
             } 
         }
-        
 
-        public override bool SetPosition(float x, float y)
+
+        #region Methods
+
+        public override bool SetPosition(ScreenPoint point)
         {
-            var vector = new Vector2(x,y);
+            var vector = new Vector2(point.X, point.Y);
 
             return _line.SetVector(vector);
         }
 
-        public override bool IsFigureCrossed(float dx, float dy)
+        public override bool IsFigureCrossed(ScreenPoint point)
         {
-                float x0 = _line.Point1.X, y0 = _line.Point1.Y, x = _line.Point2.X, y = _line.Point2.Y;
+            float dx = point.X;
+            float dy = point.Y;
 
-                var part1 = (dy - y0) / (y - y0);
-                var part2 = (dx - x0) / (x - x0);
+            float x0 = _line.Point1.X, y0 = _line.Point1.Y, x = _line.Point2.X, y = _line.Point2.Y;
 
-                var rp1 = Math.Round(part1, 1);
-                var rp2 = Math.Round(part2, 1);
+            var part1 = (dy - y0) / (y - y0);
+            var part2 = (dx - x0) / (x - x0);
 
-                if (rp1.Equals(rp2))
+            var rp1 = Math.Round(part1, 1);
+            var rp2 = Math.Round(part2, 1);
+
+            if (rp1.Equals(rp2))
+            {
+                if (x0 >= dx && x <= dx && y0 <= dy && y >= dy || x0 <= dx && x >= dx && y0 >= dy && y <= dy ||
+                    x0 >= dx && x <= dx && y0 >= dy && y <= dy || x0 <= dx && x >= dx && y0 <= dy && y >= dy)
                 {
-                    if (x0 >= dx && x <= dx && y0 <= dy && y >= dy || x0 <= dx && x >= dx && y0 >= dy && y <= dy ||
-                        x0 >= dx && x <= dx && y0 >= dy && y <= dy || x0 <= dx && x >= dx && y0 <= dy && y >= dy)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
+            }
 
             return false;
         }
 
-        public override bool ReplaceFigure(float x, float y)
+        public override bool ReplaceFigure(ScreenPoint point)
         {
             throw new NotImplementedException();
         }
@@ -68,45 +78,51 @@ namespace SharpDxTest_WF.Drawings.Figures
         public override void RenderSelectedFigure()
         {
             var ellipseStartPoint = new Ellipse(_line.Point1, 5, 5);
-            _render.FillEllipse(ellipseStartPoint, _borderBrush);
-            _render.DrawEllipse(ellipseStartPoint, _borderBrush);
+            Render.FillEllipse(ellipseStartPoint, BorderBrush);
+            Render.DrawEllipse(ellipseStartPoint, BorderBrush);
 
             var middleVector = new Vector2((_line.Point1.X - _line.Point2.X) / 2 + _line.Point2.X,
                 (_line.Point1.Y - _line.Point2.Y) / 2 + _line.Point2.Y);
             var ellipseOnCenter = new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5);
-            _render.FillEllipse(ellipseOnCenter, _borderBrush);
-            _render.DrawEllipse(ellipseOnCenter, _borderBrush);
+            Render.FillEllipse(ellipseOnCenter, BorderBrush);
+            Render.DrawEllipse(ellipseOnCenter, BorderBrush);
 
             var ellipseFinishPoint = new Ellipse(_line.Point2, 5, 5);
-            _render.FillEllipse(ellipseFinishPoint, _borderBrush);
-            _render.DrawEllipse(ellipseFinishPoint, _borderBrush);
+            Render.FillEllipse(ellipseFinishPoint, BorderBrush);
+            Render.DrawEllipse(ellipseFinishPoint, BorderBrush);
         }
 
-        public override void RenderFigure()
+        public override void StartRendering()
         {
-            _render.DrawLine(_line.Point1, _line.Point2, _borderBrush);
+            Render.DrawLine(_line.Point1, _line.Point2, BorderBrush);
         }
 
-        public override void RenderPreview(float dx, float dy)
+        public override void RenderPreview(ScreenPoint point)
         {
+            var dx = point.X;
+            var dy = point.Y;
+
             var ellipseMousePoint = new Ellipse(new RawVector2(dx, dy), 5, 5);
-            _render.FillEllipse(ellipseMousePoint, _borderBrush);
-            _render.DrawEllipse(ellipseMousePoint, _borderBrush);
+            Render.FillEllipse(ellipseMousePoint, BorderBrush);
+            Render.DrawEllipse(ellipseMousePoint, BorderBrush);
 
             if (_line.Point1 != Vector2.Zero)
             {
-                _render.DrawLine(_line.Point1, new RawVector2(dx, dy), _borderBrush);
+                Render.DrawLine(_line.Point1, new RawVector2(dx, dy), BorderBrush);
 
                 var middleVector = new Vector2((_line.Point1.X - dx) / 2 + dx,
                     (_line.Point1.Y - dy) / 2 + dy);
                 var ellipseOnCenter = new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5);
-                _render.FillEllipse(ellipseOnCenter, _borderBrush);
-                _render.DrawEllipse(ellipseOnCenter, _borderBrush);
+                Render.FillEllipse(ellipseOnCenter, BorderBrush);
+                Render.DrawEllipse(ellipseOnCenter, BorderBrush);
 
                 var ellipseStartPoint = new Ellipse(_line.Point1, 5, 5);
-                _render.FillEllipse(ellipseStartPoint, _borderBrush);
-                _render.DrawEllipse(ellipseStartPoint, _borderBrush);
+                Render.FillEllipse(ellipseStartPoint, BorderBrush);
+                Render.DrawEllipse(ellipseStartPoint, BorderBrush);
             }
         }
+
+        #endregion
+
     }
 }

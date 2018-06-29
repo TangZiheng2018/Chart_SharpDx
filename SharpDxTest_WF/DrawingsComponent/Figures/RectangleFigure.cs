@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharpDxTest_WF.DrawingsComponent.Base;
+using SharpDxTest_WF.HelperModels;
 using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
@@ -22,26 +23,28 @@ namespace SharpDxTest_WF.Drawings.Figures
         }
      
         protected RectangleF Rectangle { get;set; }
+
+        #region Methods
         
-        public override bool SetPosition(float x, float y)
+        public override bool SetPosition(ScreenPoint point)
         {
             var points = new Vector2(_rectangleF.Left, _rectangleF.Right);
 
             if (points != Vector2.Zero)
             {
-                _rectangleF.Right = x;
-                _rectangleF.Bottom = y;
+                _rectangleF.Right = point.X;
+                _rectangleF.Bottom = point.Y;
 
                 return true;
             }
 
-            _rectangleF.Left = x;
-            _rectangleF.Top = y;
-            
+            _rectangleF.Left = point.X;
+            _rectangleF.Top = point.Y;
+
             return false;
         }
 
-        public override bool IsFigureCrossed(float x, float y)
+        public override bool IsFigureCrossed(ScreenPoint point)
         {
             GraphicsPath myPath = new GraphicsPath();
 
@@ -50,57 +53,63 @@ namespace SharpDxTest_WF.Drawings.Figures
 
             myPath.AddRectangle(rect);
 
-            bool pointWithinRectangle = myPath.IsVisible(x, y);
+            bool pointWithinRectangle = myPath.IsVisible(point.X, point.Y);
 
             return pointWithinRectangle;
         }
 
-        public override bool ReplaceFigure(float x, float y)
+        public override bool ReplaceFigure(ScreenPoint point)
         {
             throw new NotImplementedException();
         }
 
         public override void RenderSelectedFigure()
         {
-            var ellipseLeftTopPoint = new Ellipse(new RawVector2(_rectangleF.Left,_rectangleF.Top), 5, 5);
-            _render.FillEllipse(ellipseLeftTopPoint, _borderBrush);
-            _render.DrawEllipse(ellipseLeftTopPoint, _borderBrush);
+            var ellipseLeftTopPoint = new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Top), 5, 5);
+            Render.FillEllipse(ellipseLeftTopPoint, BorderBrush);
+            Render.DrawEllipse(ellipseLeftTopPoint, BorderBrush);
 
             var ellipseBottomTopPoint = new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Bottom), 5, 5);
-            _render.FillEllipse(ellipseBottomTopPoint, _borderBrush);
-            _render.DrawEllipse(ellipseBottomTopPoint, _borderBrush);
+            Render.FillEllipse(ellipseBottomTopPoint, BorderBrush);
+            Render.DrawEllipse(ellipseBottomTopPoint, BorderBrush);
 
             var ellipseRightTopPoint = new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Top), 5, 5);
-            _render.FillEllipse(ellipseRightTopPoint, _borderBrush);
-            _render.DrawEllipse(ellipseRightTopPoint, _borderBrush);
+            Render.FillEllipse(ellipseRightTopPoint, BorderBrush);
+            Render.DrawEllipse(ellipseRightTopPoint, BorderBrush);
 
             var ellipseRightBottomPoint = new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Bottom), 5, 5);
-            _render.FillEllipse(ellipseRightBottomPoint, _borderBrush);
-            _render.DrawEllipse(ellipseRightBottomPoint, _borderBrush);
+            Render.FillEllipse(ellipseRightBottomPoint, BorderBrush);
+            Render.DrawEllipse(ellipseRightBottomPoint, BorderBrush);
         }
 
-        public override void RenderFigure()
+        public override void StartRendering()
         {
-            _render.DrawRectangle(_rectangleF, _borderBrush);
-            _render.FillRectangle(_rectangleF, _backgroundBrush);
+            Render.DrawRectangle(_rectangleF, BorderBrush);
+            Render.FillRectangle(_rectangleF, BackgroundBrush);
         }
 
-        public override void RenderPreview(float dx, float dy)
+        public override void RenderPreview(ScreenPoint point)
         {
+            var dx = point.X;
+            var dy = point.Y;
+
             var ellipseMousePoint = new Ellipse(new RawVector2(dx, dy), 5, 5);
-            _render.FillEllipse(ellipseMousePoint, _borderBrush);
+            Render.FillEllipse(ellipseMousePoint, BorderBrush);
 
-            var points = new Vector2(_rectangleF.Left,_rectangleF.Top);
+            var points = new Vector2(_rectangleF.Left, _rectangleF.Top);
 
             if (points != Vector2.Zero)
             {
                 _rectangleF = new RawRectangleF(_rectangleF.Left, _rectangleF.Top, dx, dy);
-                _render.DrawRectangle(_rectangleF, _borderBrush);
+                Render.DrawRectangle(_rectangleF, BorderBrush);
 
                 var ellipseFinishPoint = new Ellipse(new RawVector2(points.X, points.Y), 5, 5);
-                _render.FillEllipse(ellipseFinishPoint, _borderBrush);
-                _render.DrawEllipse(ellipseFinishPoint, _borderBrush);
+                Render.FillEllipse(ellipseFinishPoint, BorderBrush);
+                Render.DrawEllipse(ellipseFinishPoint, BorderBrush);
             }
         }
+
+        #endregion
+
     }
 }

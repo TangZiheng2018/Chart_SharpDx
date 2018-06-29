@@ -71,18 +71,21 @@
   <ItemGroup>
     <Compile Include="BarComponent\BarTypes\BarOHLC.cs" />
     <Compile Include="BarComponent\BarTypes\BarCandle.cs" />
+    <Compile Include="BarComponent\Models\ChartDataForBar.cs" />
     <Compile Include="BarComponent\Models\BarModel.cs" />
     <Compile Include="BarComponent\BarRenderingBase.cs" />
-    <Compile Include="BarComponent\Models\BarBorders.cs" />
+    <Compile Include="BarComponent\Models\BarMinMaxPositions.cs" />
     <Compile Include="BarComponent\Models\TimingBy.cs" />
+    <Compile Include="ChartRendering\Base\ChartRenderingBase.cs" />
     <Compile Include="ChartRendering\Base\ChartWindowBase.cs" />
     <Compile Include="ChartRendering\Base\WindowBase.cs" />
-    <Compile Include="ChartRendering\AxeSettings.cs" />
-    <Compile Include="ChartRendering\Brushes.cs" />
+    <Compile Include="ChartRendering\AxeSetting.cs" />
+    <Compile Include="ChartRendering\ChartDrawing.cs" />
+    <Compile Include="ChartRendering\ChartRendering.cs" />
+    <Compile Include="ChartRendering\Helpers\Brushes.cs" />
+    <Compile Include="ChartRendering\Helpers\ChartAxesMinMaxValues.cs" />
     <Compile Include="ChartRendering\Helpers\Paddings.cs" />
-    <Compile Include="ChartRendering\Interfaces\IBarSettings.cs" />
-    <Compile Include="ChartRendering\Interfaces\IChartResizing.cs" />
-    <Compile Include="ChartSettings.cs" />
+    <Compile Include="ChartRendering\BarSettings.cs" />
     <Compile Include="Chart.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -98,6 +101,8 @@
     <Compile Include="HelperModels\BarType.cs" />
     <Compile Include="HelperModels\ChartHelpers.cs" />
     <Compile Include="HelperModels\DrawingActions.cs" />
+    <Compile Include="HelperModels\ScreenPoint.cs" />
+    <Compile Include="Models\RenderBase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Chart.resx">

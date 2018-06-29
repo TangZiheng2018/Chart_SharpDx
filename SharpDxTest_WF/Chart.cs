@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using SharpDX.Direct3D11;
@@ -15,58 +12,62 @@ using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
 using Color = SharpDX.Color;
 using Text = SharpDX.DirectWrite.TextFormat;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
 using SharpDxTest_WF.BarComponent;
 using SharpDxTest_WF.BarComponent.BarTypes;
 using SharpDxTest_WF.BarComponent.Models;
-using SharpDxTest_WF.Drawings;
+using SharpDxTest_WF.ChartRendering;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDxTest_WF.DrawingsComponent.Base;
 using SharpDxTest_WF.Drawings.Figures;
 using SharpDxTest_WF.HelperModels;
-using Rectangle = SharpDX.Rectangle;
 
 namespace SharpDxTest_WF
 {
     using Device = SharpDX.Direct3D11.Device;
     using AlphaMode = SharpDX.Direct2D1.AlphaMode;
     using Factory = SharpDX.DXGI.Factory;
-    
+
+    delegate void DrawAdditionChartHelper();
+
     public partial class Chart : Form
     {
 
         #region ShartpDxFields
 
-            private RenderForm _renderForm;
-            private Device _device;
-            private SwapChain _swapChain;
-            private Texture2D _target;
-            private RenderTargetView _targetView;
-            private RenderTarget _d2dRenderTarget;
-            private RenderLoop.RenderCallback _callback;
-            private SharpDX.Direct2D1.Factory _d2dFactory;
-            private static Text _textFormat;
-            private SwapChainDescription chainDescription;
+        private RenderForm _renderForm;
+        private Device _device;
+        private SwapChain _swapChain;
+        private Texture2D _target;
+        private RenderTargetView _targetView;
+        private RenderTarget _d2DRenderTarget;
+        private RenderLoop.RenderCallback _callback;
+        private SharpDX.Direct2D1.Factory _d2DFactory;
+        private Text _textFormat;
+        private SwapChainDescription _chainDescription;
 
         #endregion
 
-        private ChartSettings _chart;
+        #region ChartFields
+
         private int _resize;
         private bool _isResized;
-        private string _textValue = "";
-        private float _textSize;
-        private Vector2 _mousePisition;
-        private List<SelectedFigureBase> _drawings;
-        private SelectedFigureBase _selectedDrawing;
-        private SelectedFigureBase _tempDrawing;
-        private BarRenderingBase _barRendering;
+        private ScreenPoint _mousePisition;
+
         private DrawingActions _actions;
         private ChartHelpers _chartHelpers;
         private BarType _barType;
 
+        private string _textValue = "";
+        private ChartDrawing _chart;
+        private List<SelectedFigureBase> _drawings;
+        private SelectedFigureBase _selectedDrawing;
+        private SelectedFigureBase _tempDrawing;
+        private BarRenderingBase _barRendering;
+        private ChartRendering.ChartRendering _chartRendering;
+        #endregion
+
+        private DrawAdditionChartHelper _drawAdditionChartHelper;
+        
         public Chart()
         {
             InitializeComponent();
@@ -76,19 +77,19 @@ namespace SharpDxTest_WF
             _resize = 0;
             _isResized = true;
 
-            _mousePisition = new Vector2();
+            _mousePisition = new ScreenPoint();
             _drawings = new List<SelectedFigureBase>();
 
-            _barType = BarType.Candle;
+            _barType = BarType.OHLC;
             _actions = DrawingActions.Default;
-            _chartHelpers = ChartHelpers.Net;
+            _chartHelpers = ChartHelpers.Default;
 
             var windowSize = new Size(800, 800);
-            _textSize = windowSize.Height * 0.015f;
             SetRenderSettings(windowSize);
-            
-            _chart = new ChartSettings(ClientSize.Width, ClientSize.Height, _d2dRenderTarget, TimingBy.Minute, 0.01f, 0.008f);
-            SetBarsFromKraken();
+
+            _chart = new ChartDrawing(ClientSize.Width, ClientSize.Height, _d2DRenderTarget, TimingBy.Minute);
+            _chartRendering = new ChartRendering.ChartRendering(_d2DRenderTarget, _textFormat, _chart);
+            GenerateBars();
             SetForChartMinMaxPoints(0);
 
             #endregion
@@ -108,156 +109,68 @@ namespace SharpDxTest_WF
             _callback += RenderChart;
             RenderLoop.Run(this, _callback);
         }
-        
+
         #region Rendering
 
         private void RenderChart()
         {
-            _d2dRenderTarget.BeginDraw();
-            _d2dRenderTarget.Clear(Color.AliceBlue);
-            
-            AdditionChartHelpers();
+            _d2DRenderTarget.BeginDraw();
+            _d2DRenderTarget.Clear(Color.AliceBlue);
 
-            _barRendering.RenderBars();
+            _drawAdditionChartHelper?.Invoke();
 
-            _tempDrawing?.RenderPreview(_mousePisition.X, _mousePisition.Y);
+            _barRendering.StartRendering();
+
+            _tempDrawing?.RenderPreview(new ScreenPoint(_mousePisition.X, _mousePisition.Y));
 
             _selectedDrawing?.RenderSelectedFigure();
-
+            
             foreach (var figure in _drawings)
             {
-                figure.RenderFigure();
+                figure.StartRendering();
             }
 
-            DrawAxesAndValues();
+            _chartRendering.StartRendering();
 
-            _d2dRenderTarget.EndDraw();
+            _d2DRenderTarget.EndDraw();
             _swapChain.Present(2, PresentFlags.None);
         }
         
-        private void AdditionChartHelpers()
+        private void DrawNet()
         {
+            var startByX = (_chart.Paddings.PaddingLeftRatio * 0.6f) * Width;
+                var startByY = _chart.Paddings.PaddingTopRatio * Height;
 
-            if (_chartHelpers == ChartHelpers.Net)
-            {
-                var startByX = (_chart.PaddingLeftRatio * 0.6f) * Width;
-                var startByY = _chart.PaddingTopRatio * Height;
-
-                for (float x = 1; x <= _chart.AxeSettings.CountPointsOnXAxe; x++)
+                for (float x = 1; x <= _chart.AxeSetting.CountPointsOnXAxe; x++)
                 {
-                    var leftPadding = _chart.AxeSettings.touchXYPoint.X -
-                                      _chart.Width * _chart.AxeSettings.PointOnEveryPercentAxeX * (x);
+                    var leftPadding = _chart.AxeSetting.TouchMiddlePoint.X -
+                                      _chart.ChartWidth * _chart.AxeSetting.PointOnEveryPercentAxeX * (x);
 
                     var vectorPoint1 = new Vector2(leftPadding, startByY);
 
-                    var vectorPoint2 = new Vector2(leftPadding, _chart.PaddingRightRatio * Height);
+                    var vectorPoint2 = new Vector2(leftPadding, _chart.Paddings.PaddingRightRatio * Height);
 
-                    _d2dRenderTarget.DrawLine(vectorPoint1, vectorPoint2, _chart.Brushes.TransparentBlack);
+                    _d2DRenderTarget.DrawLine(vectorPoint1, vectorPoint2, _chart.Brushes.TransparentBlack);
                 }
 
-                for (float y = ClientSize.Height * _chart.PaddingTopRatio; y <= ClientSize.Height * _chart.PaddingBottomRatio; y += _chart.Height * _chart.AxeSettings.PointOnEveryPercentAxeY)
+                var startPosition = ClientSize.Height * _chart.Paddings.PaddingTopRatio;
+                var finishPosition = ClientSize.Height * _chart.Paddings.PaddingBottomRatio;
+                var increaseOn = _chart.ChartHeight * _chart.AxeSetting.PointOnEveryPercentAxeY;
+
+                for (float y = startPosition;y <= finishPosition; y += increaseOn)
                 {
-                    _d2dRenderTarget.DrawLine(new Vector2(startByX, y), new Vector2(_chart.PaddingRightRatio * Width, y), _chart.Brushes.TransparentBlack);
+                    _d2DRenderTarget.DrawLine(new Vector2(startByX, y), new Vector2(_chart.Paddings.PaddingRightRatio * Width, y), _chart.Brushes.TransparentBlack);
                 }
-            }
+        }
 
-            if (_chartHelpers == ChartHelpers.Lines)
+        private void DrawLines()
+        {
+            for (float y = ClientSize.Height * _chart.Paddings.PaddingTopRatio; y <= ClientSize.Height * _chart.Paddings.PaddingBottomRatio; y += _chart.ChartHeight * _chart.AxeSetting.PointOnEveryPercentAxeY * 2)
             {
-                for (float y = ClientSize.Height * _chart.PaddingTopRatio; y <= ClientSize.Height * _chart.PaddingBottomRatio; y += _chart.Height * _chart.AxeSettings.PointOnEveryPercentAxeY * 2)
-                {
-                    _d2dRenderTarget.DrawLine(new Vector2(0, y), new Vector2(_chart.AxeSettings.touchXYPoint.X, y), _chart.Brushes.TransparentBlack);
-                }
+                _d2DRenderTarget.DrawLine(new Vector2(0, y), new Vector2(_chart.AxeSetting.TouchMiddlePoint.X, y), _chart.Brushes.TransparentBlack);
             }
-
         }
         
-        private void DrawAxesAndValues()
-        {
-
-            #region YAxe
-
-            var yVectors = _chart.YAxeVectors();
-            _d2dRenderTarget.DrawLine(yVectors[0], yVectors[1], _chart.Brushes.Black, 2);
-
-            //set Y axe and point on it
-            for (int i = 1; i <= _chart.AxeSettings.CountPointsOnYAxe; i++)
-            {
-                var vectorPoint1 = new Vector2(_chart.AxeSettings.yValuePointStart,
-                    _chart.TouchAxesPosition - _chart.Height * _chart.AxeSettings.PointOnEveryPercentAxeY * i);
-
-                var vectorPoint2 = new Vector2(_chart.AxeSettings.yValuePointFinish,
-                    _chart.TouchAxesPosition - _chart.Height * _chart.AxeSettings.PointOnEveryPercentAxeY * i);
-
-                var diffBetweenValues = (_chart.AxeValues.MaxValueLocation - _chart.AxeValues.MinValueLocation) /
-                                        _chart.AxeSettings.CountPointsOnYAxe;
-
-                _textValue = Convert.ToString(Math.Round(_chart.AxeValues.MinValueLocation + diffBetweenValues * i, 2));
-
-                var textPlacement = new RawRectangleF(Width * (_chart.PaddingRightRatio + 0.025f),
-                    (_chart.TouchAxesPosition - _chart.Height * _chart.AxeSettings.PointOnEveryPercentAxeY * i)
-                    - _textSize / 2 - 0.25f * _textSize,
-                    _d2dRenderTarget.Size.Width, _d2dRenderTarget.Size.Height);
-
-                _d2dRenderTarget.DrawText(_textValue, _textFormat, textPlacement, _chart.Brushes.Black);
-                _d2dRenderTarget.DrawLine(vectorPoint1, vectorPoint2, _chart.Brushes.Black, 2);
-            }
-
-
-            #endregion
-
-            #region XAxe
-
-            var xVectors = _chart.XAxeVectors();
-            _d2dRenderTarget.DrawLine(xVectors[0], xVectors[1], _chart.Brushes.Black, 2);
-
-            //set X axe and point on it
-            for (int i = 0; i < _chart.AxeSettings.CountPointsOnXAxe; i++)
-            {
-                var leftPadding = _chart.AxeSettings.touchXYPoint.X -
-                                  _chart.Width * _chart.AxeSettings.PointOnEveryPercentAxeX * (i + 1);
-
-                var vectorPoint1 = new Vector2(leftPadding, _chart.AxeSettings.xDatePointStart);
-
-                var vectorPoint2 = new Vector2(leftPadding, _chart.AxeSettings.xDatePointFinish);
-
-                var minDate = _chart.AxeValues.MinDateLocation;
-                var maxDate = _chart.AxeValues.MaxDateLocation;
-
-                var pointCounts = _chart.AxeSettings.CountPointsOnXAxe;
-
-                if (_chart.TimeIn == TimingBy.Minute)
-                {
-                    var timePerPoint = Math.Ceiling(maxDate.Subtract(minDate).TotalMinutes / pointCounts);
-                    var timeForSet = minDate.AddMinutes(timePerPoint * (_chart.AxeSettings.CountPointsOnXAxe - i));
-                    _textValue = timeForSet.ToShortTimeString();
-                }
-
-                if (_chart.TimeIn == TimingBy.Hour)
-                {
-                    var timePerPoint = Math.Ceiling(maxDate.Subtract(minDate).TotalHours / pointCounts);
-                    var timeForSet = minDate.AddHours(timePerPoint * (_chart.AxeSettings.CountPointsOnXAxe - i));
-                    _textValue = timeForSet.ToShortDateString() + " " + timeForSet.ToShortTimeString();
-                }
-
-                if (_chart.TimeIn == TimingBy.Day)
-                {
-                    var timePerPoint = Math.Ceiling(maxDate.Subtract(minDate).TotalDays / pointCounts);
-                    var timeForSet = minDate.AddDays(timePerPoint * (_chart.AxeSettings.CountPointsOnXAxe - i));
-                    _textValue = timeForSet.ToShortDateString();
-                }
-
-                var textPadding = (_textValue.Length * (_textSize * 0.5f)) / 2; //locate text in the center
-
-                var replaceText = new RawRectangleF(leftPadding - textPadding, ClientSize.Height * (_chart.PaddingBottomRatio + 0.025f), _d2dRenderTarget.Size.Width, _d2dRenderTarget.Size.Height);
-
-                _d2dRenderTarget.DrawText(_textValue, _textFormat, replaceText, _chart.Brushes.Black);
-                _d2dRenderTarget.DrawLine(vectorPoint1, vectorPoint2, _chart.Brushes.Black, 2);
-
-            }
-
-            #endregion
-
-        }
 
         #endregion
 
@@ -274,7 +187,10 @@ namespace SharpDxTest_WF
                     if (_barType != BarType.Candle)
                     {
                         _barType = BarType.Candle;
-                        _barRendering = new BarCandle(_d2dRenderTarget,_barRendering.Bars,_chart);
+
+                        SetForChartMinMaxPoints(_barRendering.Skip);
+
+                        _barRendering = new BarCandle(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
                         return;
                     }
                     return;
@@ -284,7 +200,10 @@ namespace SharpDxTest_WF
                     if (_barType != BarType.OHLC)
                     {
                         _barType = BarType.OHLC;
-                        _barRendering = new BarOHLC(_d2dRenderTarget, _barRendering.Bars, _chart);
+
+                        SetForChartMinMaxPoints(_barRendering.Skip);
+
+                        _barRendering = new BarOHLC(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
                         return;
                     }
                     return;
@@ -294,9 +213,10 @@ namespace SharpDxTest_WF
                     if (_chartHelpers != ChartHelpers.Net)
                     {
                         _chartHelpers = ChartHelpers.Net;
+                        _drawAdditionChartHelper += DrawNet;
                         return;
                     }
-
+                    _drawAdditionChartHelper -= DrawNet;
                     _chartHelpers = ChartHelpers.Default;
                     return;
                 }
@@ -305,9 +225,14 @@ namespace SharpDxTest_WF
                     if (_chartHelpers != ChartHelpers.Lines)
                     {
                         _chartHelpers = ChartHelpers.Lines;
+                        if (_drawAdditionChartHelper != null)
+                            _drawAdditionChartHelper = null;
+
+                        _drawAdditionChartHelper += DrawLines;
                         return;
                     }
 
+                    _drawAdditionChartHelper -= DrawLines;
                     _chartHelpers = ChartHelpers.Default;
                     return;
                 }
@@ -316,7 +241,7 @@ namespace SharpDxTest_WF
                     if (_actions != DrawingActions.LineDrawing)
                     {
                         _actions = DrawingActions.LineDrawing;
-                        _tempDrawing = new LineFigure(_d2dRenderTarget);
+                        _tempDrawing = new LineFigure(_d2DRenderTarget);
                         return;
                     }
 
@@ -328,7 +253,7 @@ namespace SharpDxTest_WF
                 {
                     if (_actions != DrawingActions.RectangleDrawing)
                     {
-                        _tempDrawing = new RectangleFigure(_d2dRenderTarget);
+                        _tempDrawing = new RectangleFigure(_d2DRenderTarget);
                         _actions = DrawingActions.RectangleDrawing;
                         return;
                     }
@@ -341,7 +266,7 @@ namespace SharpDxTest_WF
                 {
                     if (_actions != DrawingActions.EllipseDrawing)
                     {
-                        _tempDrawing = new EllipseFigure(_d2dRenderTarget);
+                        _tempDrawing = new EllipseFigure(_d2DRenderTarget);
                         _actions = DrawingActions.EllipseDrawing;
                         return;
                     }
@@ -418,8 +343,8 @@ namespace SharpDxTest_WF
                 var x = args.X;
                 var y = args.Y;
 
-                _tempDrawing = new RectangleFigure(_d2dRenderTarget);
-                var isSetted = _tempDrawing.SetPosition(x, y);
+                _tempDrawing = new RectangleFigure(_d2DRenderTarget);
+                var isSetted = _tempDrawing.SetPosition(new ScreenPoint(x,y));
 
                 if (!isSetted) return;
                 
@@ -469,15 +394,14 @@ namespace SharpDxTest_WF
             {
                 if (ModifierKeys == Keys.Control)
                 {
-                    _chart.ResizeDown();
+                    _chart.ResizeUpDown(false);
                     _resize--;
                     _isResized = false;
                     return;
                 }
+
                 if (_barRendering.Skip - 1 == -1)
-                {
                     return;
-                }
                 
                 _barRendering.Skip--;
 
@@ -489,11 +413,12 @@ namespace SharpDxTest_WF
             {
                 if (ModifierKeys == Keys.Control)
                 {
-                    _chart.ResizeUp();
+                    _chart.ResizeUpDown(true);
                     _resize++;
                     _isResized = false;
                     return;
                 }
+
                 if (_barRendering.Skip + 1 == _barRendering.Bars.Count)
                     return;
                 
@@ -508,7 +433,8 @@ namespace SharpDxTest_WF
 
         private void OnMouseMove(object sender, MouseEventArgs args)
         {
-            _mousePisition = new Vector2(args.X, args.Y);
+            _mousePisition.X = args.X;
+            _mousePisition.Y = args.Y;
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -526,7 +452,7 @@ namespace SharpDxTest_WF
 
         private void SetStraightLine(float point, bool isX)
         {
-            var line = new LineFigure(_d2dRenderTarget);
+            var line = new LineFigure(_d2DRenderTarget);
 
             var lineStart = new Vector2();
             var lineFinish = new Vector2();
@@ -534,15 +460,15 @@ namespace SharpDxTest_WF
             if (isX)
             {
                 lineStart.X = point;
-                lineStart.Y = ClientSize.Height * (_chart.PaddingTopRatio / 2);
+                lineStart.Y = ClientSize.Height * (_chart.Paddings.PaddingTopRatio / 2);
                 lineFinish.X = point;
-                lineFinish.Y = ClientSize.Height * _chart.PaddingBottomRatio;
+                lineFinish.Y = ClientSize.Height * _chart.Paddings.PaddingBottomRatio;
             }
             else
             {
-                lineStart.X = ClientSize.Width * (_chart.PaddingLeftRatio / 2);
+                lineStart.X = ClientSize.Width * (_chart.Paddings.PaddingLeftRatio / 2);
                 lineStart.Y = point;
-                lineFinish.X = ClientSize.Width * _chart.PaddingRightRatio;
+                lineFinish.X = ClientSize.Width * _chart.Paddings.PaddingRightRatio;
                 lineFinish.Y = point;
             }
 
@@ -558,7 +484,7 @@ namespace SharpDxTest_WF
 
             foreach (var figure in _drawings)
             {
-                if (figure.IsFigureCrossed(_mousePisition.X, _mousePisition.Y))
+                if (figure.IsFigureCrossed(_mousePisition))
                 {
                     _selectedDrawing = figure;
                     return;
@@ -573,7 +499,7 @@ namespace SharpDxTest_WF
             if (_tempDrawing == null)
                 return;
 
-            var isComplited = _tempDrawing.SetPosition(_mousePisition.X, _mousePisition.Y);
+            var isComplited = _tempDrawing.SetPosition(_mousePisition);
 
             if (isComplited)
             {
@@ -589,31 +515,33 @@ namespace SharpDxTest_WF
             {
                 for (int i = 0; i < _resize; i++)
                 {
-                    _chart.ResizeUp();
+                    _chart.ResizeUpDown(true);
                 }
             }
             if (_resize < 0)
             {
                 for (int i = _resize; i < 0; i++)
                 {
-                    _chart.ResizeDown();
+                    _chart.ResizeUpDown(false);
                 }
             }
         }
 
-        private void SetBarsFromKraken(int interval = 1440)
+        private void GenerateBars()
         {
-            var bars = GenerateCndelStickBars(100);
+            var bars = GenerateCndelStickBars(500);
+
             if (_barType == BarType.Candle)
-                _barRendering = new BarCandle(_d2dRenderTarget, bars, _chart);
+                _barRendering = new BarCandle(_d2DRenderTarget, bars, _chart);
             else
-                _barRendering = new BarOHLC(_d2dRenderTarget, bars, _chart);
+                _barRendering = new BarOHLC(_d2DRenderTarget, bars, _chart);
         }
 
         public void SetForChartMinMaxPoints(int skip)
         {
             _barRendering.Skip = skip;
-            _chart.SetMinMaxBorders(_barRendering.MinMaxPositions);
+
+            _chart.SetMinMaxBorders(_barRendering.MinMaxPositions());
 
             UpdateResizing();
         }
@@ -624,6 +552,9 @@ namespace SharpDxTest_WF
 
             this.ClientSize = windowSize;
 
+            var textSize = ClientSize.Width * 0.015f;
+
+
             using (SharpDX.DirectWrite.Factory textFactory = new SharpDX.DirectWrite.Factory(SharpDX.DirectWrite.FactoryType.Shared))
             {
                 _textFormat = new Text(
@@ -632,10 +563,10 @@ namespace SharpDxTest_WF
                     SharpDX.DirectWrite.FontWeight.SemiBold,
                     SharpDX.DirectWrite.FontStyle.Normal,
                     SharpDX.DirectWrite.FontStretch.Medium,
-                    _textSize);
+                    textSize);
             }
 
-            chainDescription = new SwapChainDescription()
+            _chainDescription = new SwapChainDescription()
             {
                 BufferCount = 4,
                 Flags = SwapChainFlags.None,
@@ -657,11 +588,11 @@ namespace SharpDxTest_WF
                 SharpDX.Direct3D.DriverType.Hardware,
                 DeviceCreationFlags.BgraSupport,
                 new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 },
-                chainDescription,
+                _chainDescription,
                 out _device,
                 out _swapChain);
 
-            _d2dFactory = new SharpDX.Direct2D1.Factory();
+            _d2DFactory = new SharpDX.Direct2D1.Factory();
 
             var factory = _swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(this.Handle, WindowAssociationFlags.IgnoreAll);
@@ -673,7 +604,7 @@ namespace SharpDxTest_WF
 
             var pixelFormat = new PixelFormat(Format.Unknown, AlphaMode.Premultiplied);
 
-            _d2dRenderTarget = new RenderTarget(_d2dFactory, surface,
+            _d2DRenderTarget = new RenderTarget(_d2DFactory, surface,
                 new RenderTargetProperties(pixelFormat));
         }
 
@@ -710,6 +641,7 @@ namespace SharpDxTest_WF
 
             return bars;
         }
+
         #endregion
     }
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpDxTest_WF.ChartRendering.Helpers
 {
@@ -47,7 +43,7 @@ namespace SharpDxTest_WF.ChartRendering.Helpers
         #endregion
 
         #region Constructors
-
+        
         public Paddings(float left, float top, float right, float bottom)
         {
             PaddingLeftRatio = left;

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDxTest_WF.ChartRendering.Helpers;
+using SharpDX;
+using SharpDX.Direct2D1;
 
 namespace SharpDxTest_WF.ChartRendering.Base
 {
@@ -15,7 +12,9 @@ namespace SharpDxTest_WF.ChartRendering.Base
         private float _chartWidth;
         private float _chartHeight;
         private Paddings _paddings;
-
+        private ChartAxesMinMaxValues _minMaxValues;
+        private AxeSetting _axeSetting;
+        private Brushes _brushes;
 
         #endregion
 
@@ -24,28 +23,48 @@ namespace SharpDxTest_WF.ChartRendering.Base
         public float ChartWidth
         {
             get => _chartWidth;
-            set => _chartWidth = value;
+            protected set => _chartWidth = Math.Abs(value) > 0.0f ? value : throw new NullReferenceException();
         }
 
         public float ChartHeight
         {
             get => _chartHeight;
-            set => _chartHeight = value;
+            protected set => _chartHeight = Math.Abs(value) > 0.0f ? value : throw new NullReferenceException();
         }
 
-        public Paddings Paddings { get => _paddings; set => _paddings = value; }
+        public Paddings Paddings
+        {
+            get => _paddings;
+            protected set => _paddings = value ?? throw new NullReferenceException();
+        }
+
+        public ChartAxesMinMaxValues MinMaxValues
+        {
+            get => _minMaxValues;
+            protected set => _minMaxValues = value ?? throw new NullReferenceException();
+        }
+
+        public AxeSetting AxeSetting
+        {
+            get => _axeSetting;
+            protected set => _axeSetting = value ?? throw new NullReferenceException();
+        }
+
+        public Brushes Brushes
+        {
+            get => _brushes;
+            protected set => _brushes = value ?? throw new NullReferenceException();
+        }
 
         #endregion
 
         #region Constructors
 
-        protected ChartWindowBase(float windowWidth, float windowHeight) : base(windowWidth, windowHeight)
+        protected ChartWindowBase(float windowWidth, float windowHeight,
+            RenderTarget target) : base(windowWidth, windowHeight)
         {
-
-        }
-
-        protected ChartWindowBase(Size windowSize) : base(windowSize)
-        {
+            SetPadding(0.1f);
+            SetBrushes(target);
         }
 
         #endregion
@@ -54,7 +73,7 @@ namespace SharpDxTest_WF.ChartRendering.Base
         
         protected void SetPadding(float padding)
         {
-            _paddings = new Paddings(padding, padding, 1 - padding, 1 - padding);
+            _paddings = new Paddings(padding, padding, padding, padding);
             SetChartSize();
         }
 
@@ -64,6 +83,27 @@ namespace SharpDxTest_WF.ChartRendering.Base
             ChartHeight = WindowHeight * (_paddings.PaddingBottomRatio - _paddings.PaddingTopRatio);
         }
 
+        public void SetVectors()
+        {
+            AxeSetting = new AxeSetting(WindowSize, _paddings);
+        }
+
+        public void SetBrushes(RenderTarget renderTarget)
+        {
+            Brushes = new Brushes(renderTarget);
+        }
+
+        public Vector2[] XAxeVectors()
+        {
+            return new[] { AxeSetting.XLeftPoint, AxeSetting.TouchMiddlePoint };
+        }
+
+        public Vector2[] YAxeVectors()
+        {
+            return new[] { AxeSetting.YTopPoint, AxeSetting.TouchMiddlePoint };
+        }
+  
         #endregion
+
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDxTest_WF.BarComponent.Models;
+using SharpDxTest_WF.ChartRendering;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
 
@@ -11,55 +12,53 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
 {
     public class BarOHLC : BarRenderingBase
     {
-        public BarOHLC(RenderTarget render, List<BarModel> bars, ChartSettings chartInfo) : base(render, bars, chartInfo)
+        public BarOHLC(RenderTarget render, List<BarModel> bars, ChartDrawing chartInfo, int skip = 0) : base(render, bars, chartInfo)
         {
-            Skip = 0;
+            Skip = skip;
         }
 
 
-        protected RawVector2 GetLineVector(ChartSettings chartSettings, float timeForLocate, float value)
+        protected RawVector2 GetLineVector(ChartDrawing chartSettings, float timeForLocate, float value)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.PaddingLeftRatio;
-            var barWidth = chartSettings.WindowWidth * chartSettings.BarWidthPercent;
+            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
 
-            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + barWidth / 2;
+            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + chartSettings.BarInfo.BarWidth / 2;
 
-            var pointY = GetYScreenPoint(value, chartSettings.WindowHeight, chartSettings.AxeValues.MinValueLocation,
-                chartSettings.AxeValues.MaxValueLocation);
+            var pointY = GetYScreenPoint(value, chartSettings.WindowHeight, chartSettings.MinMaxValues.MinValueLocation,
+                chartSettings.MinMaxValues.MaxValueLocation);
 
-            return new RawVector2(timePointX, pointY);
+            return new RawVector2(timePointX, pointY * 0.99f);
         }
 
-        protected RawRectangleF GetPlacement(ChartSettings chartSettings, float timeForLocate, float open, float close)
+        protected RawRectangleF GetPlacement(ChartDrawing chartSettings, float timeForLocate, float open, float close)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.PaddingLeftRatio;
-            var barWidth = chartSettings.WindowWidth * chartSettings.BarWidthPercent;
+            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
 
             var timePositionXAxe = (timeForLocate / chartSettings.TimePerPixel) + padding;
 
             var closePoint = GetYScreenPoint(Convert.ToSingle(close), chartSettings.WindowHeight,
-                chartSettings.AxeValues.MinValueLocation, chartSettings.AxeValues.MaxValueLocation);
+                chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);
 
             var openPoint = GetYScreenPoint(Convert.ToSingle(open), chartSettings.WindowHeight,
-                chartSettings.AxeValues.MinValueLocation, chartSettings.AxeValues.MaxValueLocation);
+                chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);
 
             if (close > open)
                 return new RawRectangleF(timePositionXAxe, closePoint,
-                    timePositionXAxe + barWidth, openPoint);
-            else
-                return new RawRectangleF(timePositionXAxe, openPoint,
-                    timePositionXAxe + barWidth, closePoint);
+                    timePositionXAxe + chartSettings.BarInfo.BarWidth, openPoint);
+            
+
+            return new RawRectangleF(timePositionXAxe, openPoint,
+                    timePositionXAxe + chartSettings.BarInfo.BarWidth, closePoint);
         }
-
-
-        public override void RenderBars()
+        
+        public override void StartRendering()
         {
             foreach (var bar in Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart))
             {
                 var timeSpan = 0;
-                var currentBarTime = bar.Time.Subtract(ChartInfo.AxeValues.MinDate);
+                var currentBarTime = bar.Time.Subtract(ChartInfo.MinMaxValues.MinDateLocation);
 
-                switch (ChartInfo.TimeIn)
+                switch (ChartInfo.DateIn)
                 {
                     case TimingBy.Minute:
                         timeSpan = (int)currentBarTime.TotalMinutes;
