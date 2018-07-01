@@ -16,6 +16,7 @@ namespace SharpDxTest_WF.BarComponent
         private double _low;
         private double _open;
         private double _close;
+        private double _lastPrice;
         private bool _isBear;
         private DateTime _time;
 
@@ -92,6 +93,15 @@ namespace SharpDxTest_WF.BarComponent
         {
             get => _isBear;
             set => _isBear = value;
+        }
+        public double LastPrice
+        {
+            get => _lastPrice;
+            set
+            {
+                if (value > 0)
+                    _lastPrice = value;
+            }
         }
 
         #endregion

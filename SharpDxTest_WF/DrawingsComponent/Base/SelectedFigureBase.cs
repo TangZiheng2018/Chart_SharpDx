@@ -26,7 +26,7 @@ namespace SharpDxTest_WF.DrawingsComponent.Base
 
         public abstract void RenderSelectedFigure();
 
-        public virtual SelectedFigureBase GetFigureToReplace(ScreenPoint point)
+        public virtual SelectedFigureBase FigureToReplace(ScreenPoint point)
         {
             throw new NullReferenceException();
         }

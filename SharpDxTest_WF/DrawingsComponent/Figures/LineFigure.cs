@@ -75,7 +75,7 @@ namespace SharpDxTest_WF.Drawings.Figures
             throw new NotImplementedException();
         }
 
-        public override SelectedFigureBase GetFigureToReplace(ScreenPoint point)
+        public override SelectedFigureBase FigureToReplace(ScreenPoint point)
         {
             var firstPointCrossed = CheckCrossingEllipse(new Ellipse(_line.Point1, 5, 5), point);
 
@@ -96,9 +96,7 @@ namespace SharpDxTest_WF.Drawings.Figures
             
             return null;
         }
-
         
-
         public override void RenderSelectedFigure()
         {
             RenderElipse(new Ellipse(_line.Point1, 5, 5));

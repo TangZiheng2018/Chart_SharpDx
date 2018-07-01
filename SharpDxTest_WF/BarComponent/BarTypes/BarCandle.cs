@@ -8,6 +8,7 @@ using SharpDxTest_WF.BarComponent.Models;
 using SharpDxTest_WF.ChartRendering;
 using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDX.Direct2D1;
+using Text = SharpDX.DirectWrite.TextFormat;
 using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.BarComponent.BarTypes
@@ -19,6 +20,7 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
             Skip = skip;
         }
         
+
         protected RawVector2 GetVector(ChartDrawing chartSettings, float timeForLocate, float value)
         {
             var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
@@ -48,32 +50,16 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
 
             return new RawVector2(timePointX, valueYPoint);
         }
-
+        
         public override void StartRendering()
         {
-            foreach (var bar in Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart))
+            var bars = Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart).ToList();
+            foreach (var bar in bars)
             {
-                var timeSpan = 0;
-                var currentBarTime = bar.Time.Subtract(ChartInfo.MinMaxValues.MinDateLocation);
-
-                switch (ChartInfo.DateIn)
-                {
-                    case TimingBy.Minute:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalMinutes);
-                        break;
-                    case TimingBy.Hour:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalHours);
-                        break;
-                    case TimingBy.Day:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalDays);
-                        break;
-                    default:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalDays);
-                        break;
-                }
-
                 var open = (float)bar.Open;
                 var close = (float)bar.Close;
+
+                var timeSpan = GetTimeDifference(bar.Time);
 
                 var vectorOpenStart = GetPlacement(ChartInfo, timeSpan, open, true);
                 var vectorCloseStart = GetPlacement(ChartInfo, timeSpan, close, true, false);
@@ -92,6 +78,8 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
 
                 Render.DrawLine(vectorHigh, vectorLow, ChartInfo.Brushes.Black, 2);
             }
+
+            RenderLastPosition();
         }
     }
 }

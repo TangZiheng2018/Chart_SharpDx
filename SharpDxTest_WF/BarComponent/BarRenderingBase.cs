@@ -74,11 +74,33 @@ namespace SharpDxTest_WF.BarComponent
             BorderBlackBrush = new SolidColorBrush(Render, Color.Black);
         }
 
+        #region Methods
+
         protected virtual float GetYScreenPoint(float value, float windowHeight, float minValue, float maxValue)
         {
             var chartHeight = windowHeight * 0.8f;
             var normalize = (value - minValue) / (maxValue - minValue);
             return (chartHeight - (chartHeight * normalize)) + windowHeight * 0.1f;
+        }
+
+        protected int GetTimeDifference(DateTime time)
+        {
+            var currentBarTime = time.Subtract(ChartInfo.MinMaxValues.MinDateLocation);
+
+            switch (ChartInfo.DateIn)
+            {
+                case TimingBy.Minute:
+                    return Convert.ToInt32(currentBarTime.TotalMinutes);
+                    break;
+                case TimingBy.Hour:
+                    return Convert.ToInt32(currentBarTime.TotalHours);
+                    break;
+                case TimingBy.Day:
+                    return Convert.ToInt32(currentBarTime.TotalDays);
+                    break;
+                default:
+                    return 0;
+            }
         }
 
         public BarMinMaxPositions MinMaxPositions()
@@ -108,6 +130,36 @@ namespace SharpDxTest_WF.BarComponent
 
             return borders;
         }
+
+        public void RenderLastPosition()
+        {
+            var lastBar = Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart).Last();
+
+            var timeSpan = GetTimeDifference(lastBar.Time);
+
+            var yPosition = GetYScreenPoint((float)lastBar.LastPrice, ChartInfo.WindowHeight,
+                ChartInfo.MinMaxValues.MinValueLocation, ChartInfo.MinMaxValues.MaxValueLocation);
+
+            var xPosition = ChartInfo.AxeSetting.TouchMiddlePoint.X;
+
+            var firstVector = new RawVector2(xPosition - ChartInfo.ChartWidth * 0.02f, yPosition);
+            var lastVector = new RawVector2(xPosition, yPosition);
+
+            var offset = ChartInfo.AxeSetting.PointOnEveryPercentAxeY * ChartInfo.ChartHeight / 5;
+
+            var rectangle = new RoundedRectangle
+            {
+                Rect = new RawRectangleF(xPosition - offset, yPosition - offset, xPosition + ChartInfo.ChartHeight * 0.05f,
+                    yPosition + offset),
+                RadiusX = 1,
+                RadiusY = 1
+            };
+
+            Render.FillRoundedRectangle(rectangle, ChartInfo.Brushes.Red);
+            Render.DrawLine(firstVector, lastVector, ChartInfo.Brushes.Black, 3);
+        }
+
+        #endregion
 
     }
 }

@@ -85,6 +85,7 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                 Render.FillRectangle(rectangle, bar.IsBear == true ? ChartInfo.Brushes.Red : ChartInfo.Brushes.Green);
                 Render.DrawRectangle(rectangle, ChartInfo.Brushes.Black);
             }
+
         }
     }
 }
