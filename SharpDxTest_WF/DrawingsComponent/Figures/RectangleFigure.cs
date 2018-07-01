@@ -65,21 +65,13 @@ namespace SharpDxTest_WF.Drawings.Figures
 
         public override void RenderSelectedFigure()
         {
-            var ellipseLeftTopPoint = new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Top), 5, 5);
-            Render.FillEllipse(ellipseLeftTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseLeftTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Top), 5, 5));
 
-            var ellipseBottomTopPoint = new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Bottom), 5, 5);
-            Render.FillEllipse(ellipseBottomTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseBottomTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Bottom), 5, 5));
 
-            var ellipseRightTopPoint = new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Top), 5, 5);
-            Render.FillEllipse(ellipseRightTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseRightTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Top), 5, 5));
 
-            var ellipseRightBottomPoint = new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Bottom), 5, 5);
-            Render.FillEllipse(ellipseRightBottomPoint, BorderBrush);
-            Render.DrawEllipse(ellipseRightBottomPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Bottom), 5, 5));
         }
 
         public override void StartRendering()
@@ -93,8 +85,7 @@ namespace SharpDxTest_WF.Drawings.Figures
             var dx = point.X;
             var dy = point.Y;
 
-            var ellipseMousePoint = new Ellipse(new RawVector2(dx, dy), 5, 5);
-            Render.FillEllipse(ellipseMousePoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(dx, dy), 5, 5));
 
             var points = new Vector2(_rectangleF.Left, _rectangleF.Top);
 
@@ -103,9 +94,7 @@ namespace SharpDxTest_WF.Drawings.Figures
                 _rectangleF = new RawRectangleF(_rectangleF.Left, _rectangleF.Top, dx, dy);
                 Render.DrawRectangle(_rectangleF, BorderBrush);
 
-                var ellipseFinishPoint = new Ellipse(new RawVector2(points.X, points.Y), 5, 5);
-                Render.FillEllipse(ellipseFinishPoint, BorderBrush);
-                Render.DrawEllipse(ellipseFinishPoint, BorderBrush);
+                RenderElipse(new Ellipse(new RawVector2(points.X, points.Y), 5, 5));
             }
         }
 

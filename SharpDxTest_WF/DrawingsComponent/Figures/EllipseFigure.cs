@@ -64,29 +64,15 @@ namespace SharpDxTest_WF.Drawings.Figures
 
         public override void RenderSelectedFigure()
         {
-            var ellipseCenterPoint = new Ellipse(_ellipse.Point, 5, 5);
-            Render.FillEllipse(ellipseCenterPoint, BorderBrush);
-            Render.DrawEllipse(ellipseCenterPoint, BorderBrush);
+            RenderElipse(new Ellipse(_ellipse.Point, 5, 5));
 
-            var ellipseLeftTopPoint =
-                new Ellipse(new RawVector2(_ellipse.Point.X + _ellipse.RadiusX, _ellipse.Point.Y), 5, 5);
-            Render.FillEllipse(ellipseLeftTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseLeftTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X + _ellipse.RadiusX, _ellipse.Point.Y), 5, 5));
 
-            var ellipseBottomTopPoint =
-                new Ellipse(new RawVector2(_ellipse.Point.X - _ellipse.RadiusX, _ellipse.Point.Y), 5, 5);
-            Render.FillEllipse(ellipseBottomTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseBottomTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X - _ellipse.RadiusX, _ellipse.Point.Y), 5, 5));
 
-            var ellipseRightTopPoint =
-                new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y + _ellipse.RadiusY), 5, 5);
-            Render.FillEllipse(ellipseRightTopPoint, BorderBrush);
-            Render.DrawEllipse(ellipseRightTopPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y + _ellipse.RadiusY), 5, 5));
 
-            var ellipseRightBottomPoint =
-                new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y - _ellipse.RadiusY), 5, 5);
-            Render.FillEllipse(ellipseRightBottomPoint, BorderBrush);
-            Render.DrawEllipse(ellipseRightBottomPoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y - _ellipse.RadiusY), 5, 5));
         }
 
         public override void RenderPreview(ScreenPoint point)
@@ -94,15 +80,13 @@ namespace SharpDxTest_WF.Drawings.Figures
             var dx = point.X;
             var dy = point.Y;
 
-            var ellipseMousePoint = new Ellipse(new RawVector2(dx, dy), 5, 5);
-            Render.FillEllipse(ellipseMousePoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(dx, dy), 5, 5));
 
             if (_tempVector != Vector2.Zero)
             {
                 var x = dx - _tempVector.X;
                 var y = dy - _tempVector.Y;
-                var ellipse = new Ellipse(new RawVector2(_tempVector.X + x / 2, _tempVector.Y + y / 2), x, y);
-                Render.DrawEllipse(ellipse, BorderBrush);
+                RenderElipse(new Ellipse(new RawVector2(_tempVector.X + x / 2, _tempVector.Y + y / 2), x, y));
             }
 
         }

@@ -20,6 +20,7 @@ using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDxTest_WF.DrawingsComponent.Base;
 using SharpDxTest_WF.Drawings.Figures;
 using SharpDxTest_WF.HelperModels;
+using RectangleF = SharpDX.RectangleF;
 
 namespace SharpDxTest_WF
 {
@@ -64,10 +65,12 @@ namespace SharpDxTest_WF
         private SelectedFigureBase _tempDrawing;
         private BarRenderingBase _barRendering;
         private ChartRendering.ChartRendering _chartRendering;
+        private RawRectangleF _borders;
         #endregion
 
         private DrawAdditionChartHelper _drawAdditionChartHelper;
-        
+        private bool isEipllseUnderControl;
+
         public Chart()
         {
             InitializeComponent();
@@ -92,6 +95,8 @@ namespace SharpDxTest_WF
             GenerateBars();
             SetForChartMinMaxPoints(0);
 
+            _borders = new RectangleF(windowSize.Width * _chart.Paddings.PaddingLeftRatio,
+                windowSize.Height * _chart.Paddings.PaddingTopRatio, _chart.ChartWidth, _chart.ChartHeight);
             #endregion
 
             #region FormHandlers
@@ -99,15 +104,16 @@ namespace SharpDxTest_WF
 
             KeyDown += OnKeyDown;
             MouseDown += OnMouseDown;
-            MouseUp += OnMouseUp;
+            //MouseUp += OnMouseUp;
             MouseClick += OnMouseClick;
             MouseWheel += OnMouseWheel;
             MouseMove += OnMouseMove;
 
             #endregion
-
+            
             _callback += RenderChart;
             RenderLoop.Run(this, _callback);
+            this.Hide();
         }
 
         #region Rendering
@@ -116,20 +122,23 @@ namespace SharpDxTest_WF
         {
             _d2DRenderTarget.BeginDraw();
             _d2DRenderTarget.Clear(Color.AliceBlue);
-
+            
             _drawAdditionChartHelper?.Invoke();
+            
+
+            _d2DRenderTarget.PushAxisAlignedClip(_borders, AntialiasMode.PerPrimitive);
 
             _barRendering.StartRendering();
+            
+            _d2DRenderTarget.PopAxisAlignedClip();
+            
 
-            _tempDrawing?.RenderPreview(new ScreenPoint(_mousePisition.X, _mousePisition.Y));
+            _tempDrawing?.RenderPreview(_mousePisition);
 
             _selectedDrawing?.RenderSelectedFigure();
-            
-            foreach (var figure in _drawings)
-            {
-                figure.StartRendering();
-            }
 
+            _drawings.ForEach(x=>x.StartRendering());
+            
             _chartRendering.StartRendering();
 
             _d2DRenderTarget.EndDraw();
@@ -182,6 +191,13 @@ namespace SharpDxTest_WF
 
             switch (key)
             {
+                case Keys.Escape:
+                {
+                    _renderForm.Close();
+                    this.Hide();
+                    this.Close();
+                    return;
+                }
                 case Keys.D1:
                 {
                     if (_barType != BarType.Candle)
@@ -213,10 +229,13 @@ namespace SharpDxTest_WF
                     if (_chartHelpers != ChartHelpers.Net)
                     {
                         _chartHelpers = ChartHelpers.Net;
-                        _drawAdditionChartHelper += DrawNet;
+
+                        _drawAdditionChartHelper = DrawNet;
+
                         return;
                     }
                     _drawAdditionChartHelper -= DrawNet;
+
                     _chartHelpers = ChartHelpers.Default;
                     return;
                 }
@@ -225,10 +244,8 @@ namespace SharpDxTest_WF
                     if (_chartHelpers != ChartHelpers.Lines)
                     {
                         _chartHelpers = ChartHelpers.Lines;
-                        if (_drawAdditionChartHelper != null)
-                            _drawAdditionChartHelper = null;
 
-                        _drawAdditionChartHelper += DrawLines;
+                        _drawAdditionChartHelper = DrawLines;
                         return;
                     }
 
@@ -352,13 +369,12 @@ namespace SharpDxTest_WF
                 _chartHelpers = ChartHelpers.Default;
             }
         }
-        
+
         private void OnMouseUp(object sender, MouseEventArgs args)
         {
             //if (isEipllseUnderControl == true)
             //{
             //    isEipllseUnderControl = false;
-            //    changeLine = false;
 
             //    var x = args.X;
             //    var y = args.Y;
@@ -371,21 +387,20 @@ namespace SharpDxTest_WF
 
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
-            //if (_line.SelectedFigure != null)
-            //{
-            //    selectedVector2 = checkCrossSelectedEllipse(e.X, e.Y);
+            if (_selectedDrawing != null)
+            {
+                var crossedFigure = _selectedDrawing.GetFigureToReplace(_mousePisition);
 
-            //    if (selectedVector2 == Vector2.Zero)
-            //        return;
+                if (crossedFigure == null)
+                {
+                    return;
+                }
+                _drawings.Remove(_selectedDrawing);
+                _selectedDrawing = null;
+                _tempDrawing = crossedFigure;
 
-            //    _line.RemoveFigure(_line.SelectedFigure);
-
-            //    mousePoint = _line.SelectedFigure.Point1 == selectedVector2 ? _line.SelectedFigure.Point2 : _line.SelectedFigure.Point1;
-
-            //    _line.SelectedFigure = null;
-            //    changeLine = true;
-            //    isEipllseUnderControl = true;
-            //}
+                _actions = DrawingActions.LineDrawing;
+            }
         }
         
         private void OnMouseWheel(object sender, MouseEventArgs args)
@@ -439,12 +454,21 @@ namespace SharpDxTest_WF
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            _device.Dispose();
+            //e.Cancel = true;
+            //this.Hide();
+            _renderForm.Dispose();
+            _d2DRenderTarget.Dispose();
+            _d2DFactory.Dispose();
+            _textFormat.Dispose();
             _swapChain.Dispose();
             _target.Dispose();
             _targetView.Dispose();
+            _device.Dispose();
+
+            //this.Hide();
             base.OnClosing(e);
         }
+
 
         #endregion
 

@@ -34,14 +34,14 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
         protected RawVector2 GetPlacement(ChartDrawing chartSettings, float timeForLocate, float value, bool isStart = false, bool isOpenBar = true)
         {
             var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
-            var offset = chartSettings.WindowWidth * 0.01f;
+            var left = ChartInfo.BarInfo.BarWidth / 2;
 
-            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + offset;
+            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + left;
 
             if (isStart && isOpenBar)
-                timePointX -= offset;
+                timePointX -= left;
             if (!isStart && !isOpenBar)
-                timePointX += offset;
+                timePointX += left;
 
             var valueYPoint = GetYScreenPoint(value, chartSettings.WindowHeight,
                 chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);

@@ -42,13 +42,13 @@ namespace SharpDxTest_WF.ChartRendering.Helpers
         public float MinValueLocation
         {
             get => _minValueLocation;
-            set => _minValueLocation = Math.Abs(value) > 0.0f ? value : throw new NullReferenceException();
+            set => _minValueLocation = Math.Abs(value) >= 0.0f ? value : throw new NullReferenceException();
         }
 
         public float MaxValueLocation
         {
             get => _maxValueLocation;
-            set => _maxValueLocation = Math.Abs(value) > 0.0f ? value : throw new NullReferenceException();
+            set => _maxValueLocation = Math.Abs(value) >= 0.0f ? value : throw new NullReferenceException();
         }
 
         public DateTime MinDateLocation

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,7 +16,6 @@ namespace SharpDxTest_WF.Drawings.Figures
 {
     public class LineFigure : SelectedFigureBase
     {
-
         private CustomLine _line;
 
 
@@ -75,21 +75,40 @@ namespace SharpDxTest_WF.Drawings.Figures
             throw new NotImplementedException();
         }
 
+        public override SelectedFigureBase GetFigureToReplace(ScreenPoint point)
+        {
+            var firstPointCrossed = CheckCrossingEllipse(new Ellipse(_line.Point1, 5, 5), point);
+
+            if (firstPointCrossed)
+            {
+                _line.Point1 = _line.Point2;
+                _line.Point2 = Vector2.Zero;
+                return this;
+            }
+
+            var secondPointCrossed = CheckCrossingEllipse(new Ellipse(_line.Point2, 5, 5), point);
+
+            if (secondPointCrossed)
+            {
+                _line.Point2 = Vector2.Zero;
+                return this;
+            }
+            
+            return null;
+        }
+
+        
+
         public override void RenderSelectedFigure()
         {
-            var ellipseStartPoint = new Ellipse(_line.Point1, 5, 5);
-            Render.FillEllipse(ellipseStartPoint, BorderBrush);
-            Render.DrawEllipse(ellipseStartPoint, BorderBrush);
+            RenderElipse(new Ellipse(_line.Point1, 5, 5));
 
             var middleVector = new Vector2((_line.Point1.X - _line.Point2.X) / 2 + _line.Point2.X,
                 (_line.Point1.Y - _line.Point2.Y) / 2 + _line.Point2.Y);
-            var ellipseOnCenter = new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5);
-            Render.FillEllipse(ellipseOnCenter, BorderBrush);
-            Render.DrawEllipse(ellipseOnCenter, BorderBrush);
 
-            var ellipseFinishPoint = new Ellipse(_line.Point2, 5, 5);
-            Render.FillEllipse(ellipseFinishPoint, BorderBrush);
-            Render.DrawEllipse(ellipseFinishPoint, BorderBrush);
+            RenderElipse(new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5));
+
+            RenderElipse(new Ellipse(_line.Point2, 5, 5));
         }
 
         public override void StartRendering()
@@ -102,9 +121,7 @@ namespace SharpDxTest_WF.Drawings.Figures
             var dx = point.X;
             var dy = point.Y;
 
-            var ellipseMousePoint = new Ellipse(new RawVector2(dx, dy), 5, 5);
-            Render.FillEllipse(ellipseMousePoint, BorderBrush);
-            Render.DrawEllipse(ellipseMousePoint, BorderBrush);
+            RenderElipse(new Ellipse(new RawVector2(dx, dy), 5, 5));
 
             if (_line.Point1 != Vector2.Zero)
             {
@@ -112,13 +129,9 @@ namespace SharpDxTest_WF.Drawings.Figures
 
                 var middleVector = new Vector2((_line.Point1.X - dx) / 2 + dx,
                     (_line.Point1.Y - dy) / 2 + dy);
-                var ellipseOnCenter = new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5);
-                Render.FillEllipse(ellipseOnCenter, BorderBrush);
-                Render.DrawEllipse(ellipseOnCenter, BorderBrush);
 
-                var ellipseStartPoint = new Ellipse(_line.Point1, 5, 5);
-                Render.FillEllipse(ellipseStartPoint, BorderBrush);
-                Render.DrawEllipse(ellipseStartPoint, BorderBrush);
+                RenderElipse(new Ellipse(new Vector2(middleVector.X, middleVector.Y), 5, 5));
+                RenderElipse(new Ellipse(_line.Point1, 5, 5));
             }
         }
 
