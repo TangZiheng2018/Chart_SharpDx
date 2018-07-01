@@ -57,22 +57,35 @@ namespace SharpDxTest_WF.Drawings.Figures
             return pointWithinEllipse;
         }
 
-        public override bool ReplaceFigure(ScreenPoint point)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void RenderSelectedFigure()
         {
             RenderElipse(new Ellipse(_ellipse.Point, 5, 5));
 
-            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X + _ellipse.RadiusX, _ellipse.Point.Y), 5, 5));
-
-            RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X - _ellipse.RadiusX, _ellipse.Point.Y), 5, 5));
-
             RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y + _ellipse.RadiusY), 5, 5));
 
             RenderElipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y - _ellipse.RadiusY), 5, 5));
+        }
+
+        public override SelectedFigureBase FigureToReplace(ScreenPoint point)
+        {
+            //var firstPoint = CheckCrossingEllipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y + _ellipse.RadiusY), 5, 5), point);
+            //if (firstPoint)
+            //{
+            //    _tempVector.X = point.X;
+            //    _tempVector.Y = point.Y;
+
+
+            //}
+
+            //var secondPoint = CheckCrossingEllipse(new Ellipse(new RawVector2(_ellipse.Point.X, _ellipse.Point.Y - _ellipse.RadiusY), 5, 5), point);
+            //if (secondPoint)
+            //{
+            //    _tempVector.X = point.X;
+            //    _tempVector.Y = point.Y;
+
+
+            //}
+            return this;
         }
 
         public override void RenderPreview(ScreenPoint point)
@@ -88,7 +101,6 @@ namespace SharpDxTest_WF.Drawings.Figures
                 var y = dy - _tempVector.Y;
                 RenderElipse(new Ellipse(new RawVector2(_tempVector.X + x / 2, _tempVector.Y + y / 2), x, y));
             }
-
         }
 
         public override void StartRendering()

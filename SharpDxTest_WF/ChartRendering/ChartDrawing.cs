@@ -3,6 +3,7 @@ using SharpDxTest_WF.BarComponent.Models;
 using SharpDxTest_WF.ChartRendering.Base;
 using SharpDxTest_WF.ChartRendering.Helpers;
 using SharpDX.Direct2D1;
+using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.ChartRendering
 {
@@ -77,6 +78,41 @@ namespace SharpDxTest_WF.ChartRendering
             PartToResize = MinMaxValues.MaxValueLocation / CountBarsPerChart;
             if (MinMaxValues == null)
                 SetVectors();
+        }
+
+        public void ZoomChart(RawRectangleF zoomArea)
+        {
+            var startDatePerPx = zoomArea.Left - ChartWidth * Paddings.PaddingLeftRatio;
+            var finishDatePerPx = zoomArea.Right - ChartWidth * Paddings.PaddingLeftRatio;
+
+            var diff = MinMaxValues.MaxDateLocation.Subtract(MinMaxValues.MinDateLocation).TotalMinutes;
+            var minutePerPixel = ChartWidth / diff;
+
+            var countMinutesFrom = Math.Floor(startDatePerPx / minutePerPixel);
+            var countMinutesTo = Math.Ceiling(finishDatePerPx / minutePerPixel);
+
+            if (countMinutesFrom < 0 || countMinutesTo > diff)
+                return;
+
+            var from = MinMaxValues.MinDateLocation.AddMinutes(countMinutesFrom);
+            var to = MinMaxValues.MinDateLocation.AddMinutes(countMinutesTo);
+
+
+            var fromMinToTopPosition = WindowHeight * Paddings.PaddingBottomRatio - zoomArea.Top;
+            var fromMinToBottomPosition = WindowHeight * Paddings.PaddingBottomRatio - zoomArea.Bottom;
+
+            var diffValues = MinMaxValues.MaxValueLocation - MinMaxValues.MinValueLocation;
+            var valPerHeight = diffValues / ChartHeight;
+
+            var valueSecondPart = fromMinToBottomPosition * valPerHeight;
+            var valueFirstPart = fromMinToTopPosition * valPerHeight;
+
+            var value1 = MinMaxValues.MinValueLocation + valueFirstPart;
+            var value2 = MinMaxValues.MinValueLocation + valueSecondPart;
+
+            var positions = new BarMinMaxPositions(Math.Min(value1, value2), Math.Max(value1, value2), from, to);
+
+            SetMinMaxBorders(positions);
         }
 
         public void ResizeUpDown(bool isToUp)

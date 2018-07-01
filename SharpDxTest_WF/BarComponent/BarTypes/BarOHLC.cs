@@ -18,37 +18,37 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
         }
 
 
-        protected RawVector2 GetLineVector(ChartDrawing chartSettings, float timeForLocate, float value)
+        protected RawVector2 GetLineVector(float timeForLocate, float value)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
+            var padding = ChartInfo.WindowWidth * ChartInfo.Paddings.PaddingLeftRatio;
 
-            var timePointX = (timeForLocate / chartSettings.TimePerPixel) + padding + chartSettings.BarInfo.BarWidth / 2;
+            var timePointX = (timeForLocate / ChartInfo.TimePerPixel) + padding + ChartInfo.BarInfo.BarWidth / 2;
 
-            var pointY = GetYScreenPoint(value, chartSettings.WindowHeight, chartSettings.MinMaxValues.MinValueLocation,
-                chartSettings.MinMaxValues.MaxValueLocation);
+            var pointY = GetYScreenPoint(value, ChartInfo.WindowHeight, ChartInfo.MinMaxValues.MinValueLocation,
+                ChartInfo.MinMaxValues.MaxValueLocation);
 
             return new RawVector2(timePointX, pointY * 0.99f);
         }
 
-        protected RawRectangleF GetPlacement(ChartDrawing chartSettings, float timeForLocate, float open, float close)
+        protected RawRectangleF GetPlacement(float timeForLocate, float open, float close)
         {
-            var padding = chartSettings.WindowWidth * chartSettings.Paddings.PaddingLeftRatio;
+            var padding = ChartInfo.WindowWidth * ChartInfo.Paddings.PaddingLeftRatio;
 
-            var timePositionXAxe = (timeForLocate / chartSettings.TimePerPixel) + padding;
+            var timePositionXAxe = (timeForLocate / ChartInfo.TimePerPixel) + padding;
 
-            var closePoint = GetYScreenPoint(Convert.ToSingle(close), chartSettings.WindowHeight,
-                chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);
+            var closePoint = GetYScreenPoint(Convert.ToSingle(close), ChartInfo.WindowHeight,
+                ChartInfo.MinMaxValues.MinValueLocation, ChartInfo.MinMaxValues.MaxValueLocation);
 
-            var openPoint = GetYScreenPoint(Convert.ToSingle(open), chartSettings.WindowHeight,
-                chartSettings.MinMaxValues.MinValueLocation, chartSettings.MinMaxValues.MaxValueLocation);
+            var openPoint = GetYScreenPoint(Convert.ToSingle(open), ChartInfo.WindowHeight,
+                ChartInfo.MinMaxValues.MinValueLocation, ChartInfo.MinMaxValues.MaxValueLocation);
 
             if (close > open)
                 return new RawRectangleF(timePositionXAxe, closePoint,
-                    timePositionXAxe + chartSettings.BarInfo.BarWidth, openPoint);
+                    timePositionXAxe + ChartInfo.BarInfo.BarWidth, openPoint);
             
 
             return new RawRectangleF(timePositionXAxe, openPoint,
-                    timePositionXAxe + chartSettings.BarInfo.BarWidth, closePoint);
+                    timePositionXAxe + ChartInfo.BarInfo.BarWidth, closePoint);
         }
         
         public override void StartRendering()
@@ -74,13 +74,13 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                         break;
                 }
 
-                var sett = GetPlacement(ChartInfo, timeSpan, (float)bar.Open, (float)bar.Close);
+                var sett = GetPlacement(timeSpan, (float)bar.Open, (float)bar.Close);
 
                 var rectangle = new RawRectangleF(sett.Left, sett.Top, sett.Right, sett.Bottom);
 
                 Render.DrawLine(
-                    GetLineVector(ChartInfo, timeSpan, (float)bar.High),
-                    GetLineVector(ChartInfo, timeSpan, (float)bar.Low), ChartInfo.Brushes.Black, 2);
+                    GetLineVector(timeSpan, (float)bar.High),
+                    GetLineVector(timeSpan, (float)bar.Low), ChartInfo.Brushes.Black, 2);
 
                 Render.FillRectangle(rectangle, bar.IsBear == true ? ChartInfo.Brushes.Red : ChartInfo.Brushes.Green);
                 Render.DrawRectangle(rectangle, ChartInfo.Brushes.Black);

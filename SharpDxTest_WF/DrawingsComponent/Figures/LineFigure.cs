@@ -69,11 +69,7 @@ namespace SharpDxTest_WF.Drawings.Figures
 
             return false;
         }
-
-        public override bool ReplaceFigure(ScreenPoint point)
-        {
-            throw new NotImplementedException();
-        }
+        
 
         public override SelectedFigureBase FigureToReplace(ScreenPoint point)
         {

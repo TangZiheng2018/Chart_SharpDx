@@ -16,7 +16,9 @@ namespace SharpDxTest_WF.Drawings.Figures
     public class RectangleFigure : SelectedFigureBase
     {
         private RawRectangleF _rectangleF;
-        
+
+        public RawRectangleF RectangleF { get => _rectangleF; set => _rectangleF = value; }
+
         public RectangleFigure(RenderTarget render) : base(render)
         {
             
@@ -28,7 +30,7 @@ namespace SharpDxTest_WF.Drawings.Figures
         public override bool SetPosition(ScreenPoint point)
         {
             var points = new Vector2(_rectangleF.Left, _rectangleF.Right);
-            
+
             if (points != Vector2.Zero)
             {
                 _rectangleF.Right = point.X;
@@ -72,7 +74,6 @@ namespace SharpDxTest_WF.Drawings.Figures
 
             //var rect = FortRectangle();
 
-
             var minX = Math.Min(_rectangleF.Right, _rectangleF.Left);
             var maxX = Math.Max(_rectangleF.Right, _rectangleF.Left);
             var minY = Math.Min(_rectangleF.Bottom, _rectangleF.Top);
@@ -88,24 +89,14 @@ namespace SharpDxTest_WF.Drawings.Figures
 
             return pointWithinRectangle;
         }
-
-        //private RectangleF FortRectangle()
-        //{
-
-        //}
-
-        public override bool ReplaceFigure(ScreenPoint point)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public override SelectedFigureBase FigureToReplace(ScreenPoint point)
         {
-            var leftTopVector = new Vector2(_rectangleF.Left,_rectangleF.Top);
-            var leftBottomVector = new Vector2(_rectangleF.Left,_rectangleF.Bottom);
-            var rightTopVector = new Vector2(_rectangleF.Right,_rectangleF.Top);
-            var rightBottomVector = new Vector2(_rectangleF.Right,_rectangleF.Bottom);
-            
+            var leftTopVector = new Vector2(_rectangleF.Left, _rectangleF.Top);
+            var leftBottomVector = new Vector2(_rectangleF.Left, _rectangleF.Bottom);
+            var rightTopVector = new Vector2(_rectangleF.Right, _rectangleF.Top);
+            var rightBottomVector = new Vector2(_rectangleF.Right, _rectangleF.Bottom);
+
             var firstPointCrossed = CheckCrossingEllipse(new Ellipse(leftTopVector, 5, 5), point);
             if (firstPointCrossed)
             {
@@ -121,15 +112,9 @@ namespace SharpDxTest_WF.Drawings.Figures
             var secondPointCrossed = CheckCrossingEllipse(new Ellipse(rightBottomVector, 5, 5), point);
             if (secondPointCrossed)
             {
-                //_rectangleF.Right = _rectangleF.Left;
-                //_rectangleF.Bottom = _rectangleF.Top;
-
-                //_rectangleF.Left = 0;
-                //_rectangleF.Top = 0;
-
                 _rectangleF.Right = 0;
                 _rectangleF.Bottom = 0;
-                
+
                 return this;
             }
 
@@ -139,10 +124,6 @@ namespace SharpDxTest_WF.Drawings.Figures
         public override void RenderSelectedFigure()
         {
             RenderElipse(new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Top), 5, 5));
-
-            //RenderElipse(new Ellipse(new RawVector2(_rectangleF.Left, _rectangleF.Bottom), 5, 5));
-
-            //RenderElipse(new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Top), 5, 5));
 
             RenderElipse(new Ellipse(new RawVector2(_rectangleF.Right, _rectangleF.Bottom), 5, 5));
         }
@@ -164,7 +145,7 @@ namespace SharpDxTest_WF.Drawings.Figures
 
             if (points != Vector2.Zero)
             {
-                _rectangleF = new RawRectangleF(_rectangleF.Left, _rectangleF.Top, dx, dy);
+                RectangleF = new RawRectangleF(_rectangleF.Left, _rectangleF.Top, dx, dy);
                 Render.DrawRectangle(_rectangleF, BorderBrush);
 
                 RenderElipse(new Ellipse(new RawVector2(points.X, points.Y), 5, 5));

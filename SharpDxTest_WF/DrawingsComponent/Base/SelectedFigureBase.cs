@@ -21,15 +21,10 @@ namespace SharpDxTest_WF.DrawingsComponent.Base
         public abstract bool SetPosition(ScreenPoint point);
 
         public abstract bool IsFigureCrossed(ScreenPoint point);
-
-        public abstract bool ReplaceFigure(ScreenPoint point);
-
+        
         public abstract void RenderSelectedFigure();
 
-        public virtual SelectedFigureBase FigureToReplace(ScreenPoint point)
-        {
-            throw new NullReferenceException();
-        }
+        public abstract SelectedFigureBase FigureToReplace(ScreenPoint point);
 
         protected void RenderElipse(Ellipse ellipse)
         {

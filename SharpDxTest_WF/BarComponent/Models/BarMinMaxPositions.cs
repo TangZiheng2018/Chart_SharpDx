@@ -13,7 +13,19 @@ namespace SharpDxTest_WF.BarComponent.Models
         public float MaxValue { get; set; }  
         public DateTime MinDate { get; set; }  
         public DateTime MaxDate { get; set; }
-        
+
+        public BarMinMaxPositions()
+        {
+            
+        }
+
+        public BarMinMaxPositions(float minValue, float maxValue, DateTime minDate, DateTime maxDate)
+        {
+            MinValue = minValue;
+            MaxValue = maxValue;
+            MinDate = minDate;
+            MaxDate = maxDate;
+        }
 
         public float GetTimeDifference(TimingBy timing)
         {
