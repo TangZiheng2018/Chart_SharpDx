@@ -71,7 +71,6 @@
   <ItemGroup>
     <Compile Include="BarComponent\BarTypes\BarOHLC.cs" />
     <Compile Include="BarComponent\BarTypes\BarCandle.cs" />
-    <Compile Include="BarComponent\Models\ChartDataForBar.cs" />
     <Compile Include="BarComponent\Models\BarModel.cs" />
     <Compile Include="BarComponent\BarRenderingBase.cs" />
     <Compile Include="BarComponent\Models\BarMinMaxPositions.cs" />

@@ -10,7 +10,6 @@ using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
-using Color = SharpDX.Color;
 using Text = SharpDX.DirectWrite.TextFormat;
 using SharpDxTest_WF.BarComponent;
 using SharpDxTest_WF.BarComponent.BarTypes;
@@ -58,8 +57,7 @@ namespace SharpDxTest_WF
         private DrawingActions _actions;
         private ChartHelpers _chartHelpers;
         private BarType _barType;
-
-        private string _textValue = "";
+        
         private bool _isZoomed;
         private ScreenPoint _mousePisition;
         private ChartDrawing _chart;
@@ -104,23 +102,21 @@ namespace SharpDxTest_WF
             #endregion
 
             #region FormHandlers
-
-
+            
             KeyDown += OnKeyDown;
             MouseDown += OnMouseDown;
-            //MouseUp += OnMouseUp;
             MouseClick += OnMouseClick;
             MouseWheel += OnMouseWheel;
             MouseMove += OnMouseMove;
-            Resize += Chart_ResizeEnd;
-
+            Resize += OnResizeEnd;
+            Closing += OnClosing;
+            
             #endregion
 
             _callback += RenderChart;
             RenderLoop.Run(this, _callback);
-            this.Hide();
         }
-
+        
         #region Rendering
 
         private void RenderChart()
@@ -142,7 +138,7 @@ namespace SharpDxTest_WF
             
             _d2DRenderTarget.PopAxisAlignedClip();
 
-            _barRendering.RenderLastPosition();
+            //_barRendering.RenderLastPosition();
 
             _tempDrawing?.RenderPreview(_mousePisition);
 
@@ -191,221 +187,30 @@ namespace SharpDxTest_WF
             }
         }
         
-
         #endregion
 
         #region RenderHandlers
 
         private void OnKeyDown(object sender, KeyEventArgs args)
         {
-            var key = args.KeyData;
-
-            switch (key)
-            {
-                case Keys.Escape:
-                {
-                    _renderForm.Close();
-                    this.Hide();
-                    this.Close();
-                    break;
-                }
-                case Keys.D1:
-                {
-                    if (_barType != BarType.Candle)
-                    {
-                        _barType = BarType.Candle;
-
-                        SetForChartMinMaxPoints(_barRendering.Skip);
-
-                        _barRendering = new BarCandle(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
-                        break;
-                    }
-                    break;
-                }
-                case Keys.D2:
-                {
-                    if (_barType != BarType.OHLC)
-                    {
-                        _barType = BarType.OHLC;
-
-                        SetForChartMinMaxPoints(_barRendering.Skip);
-
-                        _barRendering = new BarOHLC(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
-                        break;
-                    }
-                    break;
-                }
-                case Keys.Q:
-                {
-                    if (_chartHelpers != ChartHelpers.Net)
-                    {
-                        _chartHelpers = ChartHelpers.Net;
-
-                        _drawAdditionChartHelper = DrawNet;
-
-                        break;
-                    }
-                    _drawAdditionChartHelper -= DrawNet;
-
-                    _chartHelpers = ChartHelpers.Default;
-                    break;
-                }
-                case Keys.W:
-                {
-                    if (_chartHelpers != ChartHelpers.Lines)
-                    {
-                        _chartHelpers = ChartHelpers.Lines;
-
-                        _drawAdditionChartHelper = DrawLines;
-                        break;
-                    }
-
-                    _drawAdditionChartHelper -= DrawLines;
-                    _chartHelpers = ChartHelpers.Default;
-                    break;
-                }
-                case Keys.E:
-                {
-                    if (_actions != DrawingActions.LineDrawing)
-                    {
-                        _actions = DrawingActions.LineDrawing;
-                        _tempDrawing = new LineFigure(_d2DRenderTarget);
-                        break;
-                    }
-
-                    _tempDrawing = null;
-                    _actions = DrawingActions.Default;
-                    break;
-                }
-                case Keys.R:
-                {
-                    if (_actions != DrawingActions.RectangleDrawing)
-                    {
-                        _tempDrawing = new RectangleFigure(_d2DRenderTarget);
-                        _actions = DrawingActions.RectangleDrawing;
-                        break;
-                    }
-
-                    _tempDrawing = null;
-                    _actions = DrawingActions.Default;
-                    break;
-                }
-                case Keys.T:
-                {
-                    if (_actions != DrawingActions.EllipseDrawing)
-                    {
-                        _tempDrawing = new EllipseFigure(_d2DRenderTarget);
-                        _actions = DrawingActions.EllipseDrawing;
-                        break;
-                    }
-
-                    _tempDrawing = null;
-                    _actions = DrawingActions.Default;
-                    break;
-                }
-                case Keys.A:
-                {
-                    if(_actions != DrawingActions.StraightLineXDrawing)
-                    {
-                        _actions = DrawingActions.StraightLineXDrawing;
-                        break;
-                    }
-
-                    _actions = DrawingActions.Default;
-                    break;
-                }
-                case Keys.S:
-                {
-                    if (_actions != DrawingActions.StraightLineYDrawing)
-                    {
-                        _actions = DrawingActions.StraightLineYDrawing;
-                        break;
-                    }
-
-                    _actions = DrawingActions.Default;
-                    break;
-                }
-                case Keys.Z:
-                {
-                    if (_chartHelpers != ChartHelpers.Zoom)
-                    {
-                        _zoomArea = null;
-                        _chartHelpers = ChartHelpers.Zoom;
-                        break;
-                    }
-
-                    _chartHelpers = ChartHelpers.Default;
-                    break;
-                }
-                case Keys.Delete:
-                {
-                    RemoveFigure();
-                    break;
-                }
-                case Keys.C:
-                {
-                    _chart.ChangeColor();
-                    break;
-                }
-                case Keys.Enter:
-                {
-                    ResetChart();
-                    break;
-                }
-            }
+            KeyKeyboardChecker(args.KeyData);
         }
-
         
-
         private void OnMouseClick(object sender, MouseEventArgs args)
         {
-            switch (_actions)
-            {
-                case DrawingActions.LineDrawing:
-                {
-                    SetChanges();
-                    return;
-                }
-                case DrawingActions.RectangleDrawing:
-                {
-                    SetChanges();
-                    return;
-                }
-                case DrawingActions.EllipseDrawing:
-                {
-                    SetChanges();
-                    return;
-                }
-                case DrawingActions.StraightLineXDrawing:
-                {
-                    SetStraightLine(_mousePisition.X, true);
-                    break;
-                }
-                case DrawingActions.StraightLineYDrawing:
-                {
-                    SetStraightLine(_mousePisition.Y,false);
-                    break;
-                }
-            }
+            MouseClickActionCheker();
 
-            CheckCrosing();
+            CheckFigureCrosing();
 
             if (_chartHelpers == ChartHelpers.Zoom)
             {
                 var x = args.X;
                 var y = args.Y;
-
-                if (_zoomArea == null)
-                    _zoomArea = new RectangleFigure(_d2DRenderTarget);
-                var isSetted = _zoomArea.SetPosition(new ScreenPoint(x,y));
-
-
-                if (!isSetted) return;
-                _chartHelpers = ChartHelpers.Default;
-                _isZoomed = false;
+                
+                ZoomUpChart(x,y);
             }
         }
-
+        
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
             if (_selectedDrawing == null)
@@ -413,20 +218,7 @@ namespace SharpDxTest_WF
                 return;
             }
 
-            var crossedFigure = _selectedDrawing.FigureToReplace(_mousePisition);
-
-            if (crossedFigure == null)
-            {
-                return;
-            }
-            _drawings.Remove(_selectedDrawing);
-
-            _selectedDrawing = null;
-
-            _tempDrawing = crossedFigure;
-
-            _actions = DrawingActions.LineDrawing;
-        
+            ReplacingFigure();
         }
         
         private void OnMouseWheel(object sender, MouseEventArgs args)
@@ -435,59 +227,52 @@ namespace SharpDxTest_WF
             {
                 if (ModifierKeys == Keys.Control)
                 {
-                    _chart.ResizeUpDown(false);
-                    _resize--;
-                    _isResized = false;
+                    ResizeBars(false);
                     return;
                 }
 
-                if (_barRendering.Skip - 1 == -1)
-                    return;
-                
-                _barRendering.Skip--;
-                
-                SetForChartMinMaxPoints(_barRendering.Skip);
-
-                if (_zoomArea != null)
-                    _isZoomed = false;
-
-                _isResized = false;
+                MoveBars(args.Delta);
             }
             else
             {
                 if (ModifierKeys == Keys.Control)
                 {
-                    _chart.ResizeUpDown(true);
-                    _resize++;
-                    _isResized = false;
+                    ResizeBars(true);
                     return;
                 }
 
-                if (_barRendering.Skip + 1 == _barRendering.Bars.Count)
-                    return;
-                
-                _barRendering.Skip++;
-
-                SetForChartMinMaxPoints(_barRendering.Skip);
-
-                if (_zoomArea != null)
-                    _isZoomed = false;
-
-                _isResized = false;
+                MoveBars(args.Delta);
             }
-            
-        }
 
+        }
+        
         private void OnMouseMove(object sender, MouseEventArgs args)
         {
             _mousePisition.X = args.X;
             _mousePisition.Y = args.Y;
         }
-
-        protected override void OnClosing(CancelEventArgs e)
+        
+        private void OnResizeEnd(object sender, EventArgs e)
         {
-            //e.Cancel = true;
-            //this.Hide();
+            var newSize = new Size(ClientSize.Width, ClientSize.Height);
+            
+            UpdateRender(newSize);
+
+            _chart = new ChartDrawing(ClientSize.Width, ClientSize.Height, _d2DRenderTarget, TimingBy.Minute);
+
+            _chartRendering = new ChartRendering.ChartRendering(_d2DRenderTarget, _textFormat, _chart);
+
+            SetBarRendering(_barRendering.Bars);
+
+            SetForChartMinMaxPoints(0);
+
+            _borders = new RectangleF(newSize.Width * _chart.Paddings.PaddingLeftRatio,
+                newSize.Height * _chart.Paddings.PaddingTopRatio, _chart.ChartWidth, _chart.ChartHeight);
+        }
+
+        private void OnClosing(object sender, CancelEventArgs e)
+        {
+            this.Dispose();
             _renderForm.Dispose();
             _d2DRenderTarget.Dispose();
             _d2DFactory.Dispose();
@@ -496,37 +281,282 @@ namespace SharpDxTest_WF
             _target.Dispose();
             _targetView.Dispose();
             _device.Dispose();
-
-            //this.Hide();
-            base.OnClosing(e);
-        }
-
-        private void Chart_ResizeEnd(object sender, EventArgs e)
-        {
-            var newSize = new Size(ClientSize.Width, ClientSize.Height);
-            
-            UpdateRender(newSize);
-            _chart = new ChartDrawing(ClientSize.Width, ClientSize.Height, _d2DRenderTarget, TimingBy.Minute);
-            _chartRendering = new ChartRendering.ChartRendering(_d2DRenderTarget, _textFormat, _chart);
-            UpdateBarRendering();
-            SetForChartMinMaxPoints(0);
-
-            _borders = new RectangleF(newSize.Width * _chart.Paddings.PaddingLeftRatio,
-                newSize.Height * _chart.Paddings.PaddingTopRatio, _chart.ChartWidth, _chart.ChartHeight);
         }
 
         #endregion
 
         #region Methods
 
-        private void SetStraightLine(float point, bool isX)
+        private void KeyKeyboardChecker(Keys key)
+        {
+
+            switch (key)
+            {
+                case Keys.Escape:
+                    {
+                        _renderForm.Close();
+                        this.Hide();
+                        this.Close();
+                        break;
+                    }
+                case Keys.D1:
+                    {
+                        if (_barType != BarType.Candle)
+                        {
+                            _barType = BarType.Candle;
+
+                            SetForChartMinMaxPoints(_barRendering.Skip);
+
+                            _barRendering = new BarCandle(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
+                            break;
+                        }
+                        break;
+                    }
+                case Keys.D2:
+                    {
+                        if (_barType != BarType.OHLC)
+                        {
+                            _barType = BarType.OHLC;
+
+                            SetForChartMinMaxPoints(_barRendering.Skip);
+
+                            _barRendering = new BarOHLC(_d2DRenderTarget, _barRendering.Bars, _chart, _barRendering.Skip);
+                            break;
+                        }
+                        break;
+                    }
+                case Keys.Q:
+                    {
+                        if (_chartHelpers != ChartHelpers.Net)
+                        {
+                            _chartHelpers = ChartHelpers.Net;
+
+                            _drawAdditionChartHelper = DrawNet;
+
+                            break;
+                        }
+                        _drawAdditionChartHelper -= DrawNet;
+
+                        _chartHelpers = ChartHelpers.Default;
+                        break;
+                    }
+                case Keys.W:
+                    {
+                        if (_chartHelpers != ChartHelpers.Lines)
+                        {
+                            _chartHelpers = ChartHelpers.Lines;
+
+                            _drawAdditionChartHelper = DrawLines;
+                            break;
+                        }
+
+                        _drawAdditionChartHelper -= DrawLines;
+                        _chartHelpers = ChartHelpers.Default;
+                        break;
+                    }
+                case Keys.E:
+                    {
+                        if (_actions != DrawingActions.LineDrawing)
+                        {
+                            _actions = DrawingActions.LineDrawing;
+                            _tempDrawing = new LineFigure(_d2DRenderTarget);
+                            break;
+                        }
+
+                        _tempDrawing = null;
+                        _actions = DrawingActions.Default;
+                        break;
+                    }
+                case Keys.R:
+                    {
+                        if (_actions != DrawingActions.RectangleDrawing)
+                        {
+                            _tempDrawing = new RectangleFigure(_d2DRenderTarget);
+                            _actions = DrawingActions.RectangleDrawing;
+                            break;
+                        }
+
+                        _tempDrawing = null;
+                        _actions = DrawingActions.Default;
+                        break;
+                    }
+                case Keys.T:
+                    {
+                        if (_actions != DrawingActions.EllipseDrawing)
+                        {
+                            _tempDrawing = new EllipseFigure(_d2DRenderTarget);
+                            _actions = DrawingActions.EllipseDrawing;
+                            break;
+                        }
+
+                        _tempDrawing = null;
+                        _actions = DrawingActions.Default;
+                        break;
+                    }
+                case Keys.A:
+                    {
+                        if (_actions != DrawingActions.StraightLineXDrawing)
+                        {
+                            _actions = DrawingActions.StraightLineXDrawing;
+                            break;
+                        }
+
+                        _actions = DrawingActions.Default;
+                        break;
+                    }
+                case Keys.S:
+                    {
+                        if (_actions != DrawingActions.StraightLineYDrawing)
+                        {
+                            _actions = DrawingActions.StraightLineYDrawing;
+                            break;
+                        }
+
+                        _actions = DrawingActions.Default;
+                        break;
+                    }
+                case Keys.Z:
+                    {
+                        if (_chartHelpers != ChartHelpers.Zoom)
+                        {
+                            _zoomArea = null;
+                            _chartHelpers = ChartHelpers.Zoom;
+                            break;
+                        }
+
+                        _chartHelpers = ChartHelpers.Default;
+                        break;
+                    }
+                case Keys.Delete:
+                    {
+                        RemoveFigure();
+                        break;
+                    }
+                case Keys.C:
+                    {
+                        _chart.ChangeColor();
+                        break;
+                    }
+                case Keys.Enter:
+                    {
+                        ResetChart();
+                        break;
+                    }
+            }
+
+        }
+        
+        private void ZoomUpChart(int x, int y)
+        {
+            if (_zoomArea == null)
+                _zoomArea = new RectangleFigure(_d2DRenderTarget);
+
+            var isSetted = _zoomArea.SetPosition(new ScreenPoint(x, y));
+
+            if (!isSetted)
+                return;
+
+            _chartHelpers = ChartHelpers.Default;
+            _isZoomed = false;
+        }
+
+        private void MouseClickActionCheker()
+        {
+            switch (_actions)
+            {
+                case DrawingActions.LineDrawing:
+                {
+                    SetChanges();
+                    break;
+                }
+                case DrawingActions.RectangleDrawing:
+                {
+                    SetChanges();
+                    break;
+                }
+                case DrawingActions.EllipseDrawing:
+                {
+                    SetChanges();
+                    break;
+                }
+                case DrawingActions.StraightLineXDrawing:
+                {
+                    SetStraightLine(_mousePisition.X, true);
+                    break;
+                }
+                case DrawingActions.StraightLineYDrawing:
+                {
+                    SetStraightLine(_mousePisition.Y, false);
+                    break;
+                }
+            }
+
+        }
+
+        private void ReplacingFigure()
+        {
+            var crossedFigure = _selectedDrawing.FigureToReplace(_mousePisition);
+
+            if (crossedFigure == null)
+            {
+                return;
+            }
+
+            _drawings.Remove(_selectedDrawing);
+
+            _selectedDrawing = null;
+
+            _tempDrawing = crossedFigure;
+
+            _actions = DrawingActions.LineDrawing;
+        }
+
+        private void MoveBars(int delta)
+        {
+            if (delta < 0)
+            {
+                if (_barRendering.Skip - 1 == -1)
+                    return;
+
+                _barRendering.Skip--;
+
+                SetForChartMinMaxPoints(_barRendering.Skip);
+            }
+            else
+            {
+                if (_barRendering.Skip + 1 == _barRendering.Bars.Count)
+                    return;
+
+                _barRendering.Skip++;
+            }
+
+            SetForChartMinMaxPoints(_barRendering.Skip);
+
+            if (_zoomArea != null)
+                _isZoomed = false;
+
+            _isResized = false;
+        }
+
+        private void ResizeBars(bool isToUp)
+        {
+            _chart.ResizeUpDown(isToUp);
+            _isResized = false;
+
+            if (isToUp)
+                _resize++;
+            else
+                _resize--;
+        }
+
+        private void SetStraightLine(float point, bool isAxeX)
         {
             var line = new LineFigure(_d2DRenderTarget);
 
             var lineStart = new Vector2();
             var lineFinish = new Vector2();
 
-            if (isX)
+            if (isAxeX)
             {
                 lineStart.X = point;
                 lineStart.Y = ClientSize.Height * (_chart.Paddings.PaddingTopRatio / 2);
@@ -549,10 +579,12 @@ namespace SharpDxTest_WF
         private void ResetChart()
         {
             _drawings = new List<SelectedFigureBase>();
+
             _zoomArea = null;
             _selectedDrawing = null;
             _tempDrawing = null;
             _drawAdditionChartHelper = null;
+
             _actions = DrawingActions.Default;
             _chartHelpers = ChartHelpers.Default;
             _isZoomed = true;
@@ -560,7 +592,7 @@ namespace SharpDxTest_WF
             SetForChartMinMaxPoints(0);
         }
 
-        private void CheckCrosing()
+        private void CheckFigureCrosing()
         {
             if (_drawings?.Any() == false)
                 return;
@@ -604,6 +636,7 @@ namespace SharpDxTest_WF
         private void ZoomChart()
         {
             _chart.ZoomChart(_zoomArea.RectangleF);
+
             _isZoomed = true;
         }
 
@@ -629,18 +662,15 @@ namespace SharpDxTest_WF
         {
             var bars = GenerateCndelStickBars(500);
 
+            SetBarRendering(bars);
+        }
+
+        private void SetBarRendering(List<BarModel> bars)
+        {
             if (_barType == BarType.Candle)
                 _barRendering = new BarCandle(_d2DRenderTarget, bars, _chart);
             else
                 _barRendering = new BarOHLC(_d2DRenderTarget, bars, _chart);
-        }
-
-        private void UpdateBarRendering()
-        {
-            if (_barType == BarType.Candle)
-                _barRendering = new BarCandle(_d2DRenderTarget, _barRendering.Bars, _chart);
-            else
-                _barRendering = new BarOHLC(_d2DRenderTarget, _barRendering.Bars, _chart);
         }
 
         private void SetForChartMinMaxPoints(int skip)
@@ -803,5 +833,6 @@ namespace SharpDxTest_WF
         }
 
         #endregion
+
     }
 }

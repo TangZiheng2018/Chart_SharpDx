@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SharpDxTest_WF
@@ -14,14 +11,19 @@ namespace SharpDxTest_WF
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            
             try
             {
-                Application.Run(new Chart());
+                using (var chart = new Chart())
+                {
+                    Application.Run(chart);
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+
         }
     }
 }

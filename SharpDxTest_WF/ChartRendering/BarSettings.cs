@@ -7,8 +7,8 @@ namespace SharpDxTest_WF.ChartRendering
 
         #region Fields
 
-        private float _barWidthPercent = 0.02f;
-        private float _spaceBetweenBarsPercent = 0.01f;
+        private float _barWidthPercent = 0.03f;
+        private float _spaceBetweenBarsPercent = 0.04f;
         private readonly float _windowWidth;
 
         #endregion

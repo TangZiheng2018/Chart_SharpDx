@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Drawing.Drawing2D;
 using SharpDxTest_WF.DrawingsComponent.Base;
 using SharpDxTest_WF.HelperModels;
 using SharpDX;
@@ -25,7 +19,6 @@ namespace SharpDxTest_WF.Drawings.Figures
             
         }
         
-
         #region Methods
         public override bool SetPosition(ScreenPoint point)
         {

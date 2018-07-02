@@ -16,9 +16,7 @@ namespace SharpDxTest_WF.ChartRendering
         private BarSettings _barSettings;
 
         #endregion
-
-        #region Constructors
-
+        
         public ChartDrawing(float windowWidth, float windowHeight, RenderTarget render, TimingBy timeBy) : base(windowWidth, windowHeight, render)
         {
             BarInfo = new BarSettings(ChartHeight);
@@ -26,10 +24,7 @@ namespace SharpDxTest_WF.ChartRendering
 
             DateIn = timeBy;
         }
-
-
-        #endregion
-
+        
         #region Properties
 
         public int CountBarsPerChart => _barSettings.CountBarsPerWindow;

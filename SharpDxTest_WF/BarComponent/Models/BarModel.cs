@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDxTest_WF.BarComponent.Models;
-using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.BarComponent
 {

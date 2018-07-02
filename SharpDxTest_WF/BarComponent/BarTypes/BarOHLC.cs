@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDxTest_WF.BarComponent.Models;
 using SharpDxTest_WF.ChartRendering;
 using SharpDX.Direct2D1;
 using SharpDX.Mathematics.Interop;
@@ -55,29 +52,10 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
         {
             foreach (var bar in Bars.Skip(Skip).Take(ChartInfo.CountBarsPerChart))
             {
-                var timeSpan = 0;
-                var currentBarTime = bar.Time.Subtract(ChartInfo.MinMaxValues.MinDateLocation);
+                var timeSpan = GetTimeDifference(bar.Time);
 
-                switch (ChartInfo.DateIn)
-                {
-                    case TimingBy.Minute:
-                        timeSpan = (int)currentBarTime.TotalMinutes;
-                        break;
-                    case TimingBy.Hour:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalHours);
-                        break;
-                    case TimingBy.Day:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalDays);
-                        break;
-                    default:
-                        timeSpan = Convert.ToInt32(currentBarTime.TotalDays);
-                        break;
-                }
-
-                var sett = GetPlacement(timeSpan, (float)bar.Open, (float)bar.Close);
-
-                var rectangle = new RawRectangleF(sett.Left, sett.Top, sett.Right, sett.Bottom);
-
+                var rectangle = GetPlacement(timeSpan, (float)bar.Open, (float)bar.Close);
+                
                 Render.DrawLine(
                     GetLineVector(timeSpan, (float)bar.High),
                     GetLineVector(timeSpan, (float)bar.Low), ChartInfo.Brushes.Black, 2);

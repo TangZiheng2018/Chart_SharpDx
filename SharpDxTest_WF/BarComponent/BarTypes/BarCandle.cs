@@ -1,14 +1,7 @@
-﻿using System;
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDxTest_WF.BarComponent.Models;
 using SharpDxTest_WF.ChartRendering;
-using SharpDxTest_WF.DrawingsComponent.AdditionalModels;
 using SharpDX.Direct2D1;
-using Text = SharpDX.DirectWrite.TextFormat;
 using SharpDX.Mathematics.Interop;
 
 namespace SharpDxTest_WF.BarComponent.BarTypes
@@ -36,14 +29,14 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
         protected RawVector2 GetPlacement(float timeForLocate, float value, bool isStart = false, bool isOpenBar = true)
         {
             var padding = ChartInfo.WindowWidth * ChartInfo.Paddings.PaddingLeftRatio;
-            var left = ChartInfo.BarInfo.BarWidth / 2;
+            var offset = ChartInfo.BarInfo.BarWidth / 2;
 
-            var timePointX = (timeForLocate / ChartInfo.TimePerPixel) + padding + left;
+            var timePointX = (timeForLocate / ChartInfo.TimePerPixel) + padding + offset;
 
             if (isStart && isOpenBar)
-                timePointX -= left;
+                timePointX -= offset * 1.5f;
             if (!isStart && !isOpenBar)
-                timePointX += left;
+                timePointX += offset * 1.5f;
 
             var valueYPoint = GetYScreenPoint(value, ChartInfo.WindowHeight,
                 ChartInfo.MinMaxValues.MinValueLocation, ChartInfo.MinMaxValues.MaxValueLocation);
@@ -68,9 +61,9 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
                 var vectorCloseFinish = GetPlacement(timeSpan, close, isOpenBar: false);
 
                 Render.DrawLine(vectorOpenStart, vectorOpenFinish,
-                    GreenBgBrush, 2);
+                    GreenBgBrush, 3);
                 Render.DrawLine(vectorCloseStart, vectorCloseFinish,
-                    RedBgBrush, 2);
+                    RedBgBrush, 3);
 
 
                 var vectorHigh = GetVector( timeSpan, (float)bar.High);
@@ -78,8 +71,6 @@ namespace SharpDxTest_WF.BarComponent.BarTypes
 
                 Render.DrawLine(vectorHigh, vectorLow, ChartInfo.Brushes.Black, 2);
             }
-
-            RenderLastPosition();
         }
     }
 }

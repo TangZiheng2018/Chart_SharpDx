@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SharpDxTest_WF.HelperModels
+﻿namespace SharpDxTest_WF.HelperModels
 {
-    public class ScreenPoint
+    public struct ScreenPoint
     {
         public float X { get; set; }
 
         public float Y { get; set; }
-
-        public ScreenPoint()
-        {
-            
-        }
-
+        
         public ScreenPoint(float x, float y)
         {
             X = x;
